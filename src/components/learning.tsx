@@ -50,6 +50,19 @@ export function Dashboard() {
           </Link>
         }
       />
+      <section className="sandbox-dashboard-callout">
+        <div>
+          <Tag green>NEW FOUNDATION</Tag>
+          <h2>Test your idea in seven-on-seven.</h2>
+          <p>
+            Draw routes, configure an opponent, and compare timed responses.
+          </p>
+        </div>
+        <Link href="/sandbox" className="button primary">
+          Open the sandbox
+          <ArrowRight size={16} />
+        </Link>
+      </section>
       <section className="hero">
         <div className="hero-copy">
           <span className="hero-eyebrow">

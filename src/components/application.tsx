@@ -14,6 +14,8 @@ import {
   Menu,
   X,
   ArrowRight,
+  SlidersHorizontal,
+  HardDrive,
 } from "lucide-react";
 import { lessons, categories } from "@/domain/curriculum";
 import { glossary } from "@/domain/glossary";
@@ -22,15 +24,23 @@ import { PassingLab } from "./passing-lab";
 import { LessonPage } from "./lesson";
 import { Designer } from "./designer";
 import { Training } from "./training";
+import { Sandbox } from "./sandbox";
+import { Profiles } from "./profiles";
+import { WorkspaceDataPage } from "./workspace-data";
+import { useStore } from "@/lib/store";
 const nav = [
   { href: "/", label: "Overview", icon: LayoutDashboard },
   { href: "/learn", label: "Learn", icon: BookOpen },
   { href: "/simulator", label: "Simulator", icon: Waypoints },
+  { href: "/sandbox", label: "7-on-7 sandbox", icon: Waypoints },
+  { href: "/profiles", label: "Opponent profiles", icon: SlidersHorizontal },
   { href: "/designer", label: "Play designer", icon: PenTool },
   { href: "/training", label: "Training", icon: Target },
   { href: "/glossary", label: "Glossary", icon: Book },
+  { href: "/workspace", label: "Workspace data", icon: HardDrive },
 ];
 export function Application() {
+  const { storageError } = useStore();
   const path = usePathname();
   const [search, setSearch] = useState("");
   const [mobile, setMobile] = useState(false);
@@ -55,6 +65,9 @@ export function Application() {
   else if (active === "lesson")
     content = <LessonPage key={parts[1]} id={parts[1]} />;
   else if (active === "simulator") content = <PassingLab />;
+  else if (active === "sandbox") content = <Sandbox />;
+  else if (active === "profiles") content = <Profiles />;
+  else if (active === "workspace") content = <WorkspaceDataPage />;
   else if (active === "designer") content = <Designer />;
   else if (active === "training") content = <Training />;
   else if (active === "glossary") content = <Glossary />;
@@ -131,7 +144,11 @@ export function Application() {
             <span className="avatar">Y</span>
             <div>
               <strong>Your workspace</strong>
-              <span>Progress saved on this device</span>
+              <span>
+                {storageError
+                  ? "Changes are in memory only"
+                  : "Progress saved on this device"}
+              </span>
             </div>
           </div>
         </div>
@@ -250,6 +267,11 @@ export function Application() {
           </span>
         </header>
         <main id="main" className="page-content">
+          {storageError && (
+            <div className="storage-warning" role="alert">
+              {storageError} <Link href="/workspace">Open Workspace Data</Link>
+            </div>
+          )}
           {content}
         </main>
         <footer className="app-footer">

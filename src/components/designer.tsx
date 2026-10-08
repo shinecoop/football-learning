@@ -1,5 +1,7 @@
 "use client";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { SANDBOX_FORMATIONS } from "@/domain/sandbox";
 import {
   Save,
   Trash2,
@@ -16,6 +18,7 @@ import { useAnimation } from "@/lib/use-animation";
 import { FootballField } from "./field";
 import { PageHeading, FieldControls, Tag } from "./ui";
 export function Designer() {
+  const router = useRouter();
   const { plays } = useStore();
   const [formationId, setFormationId] = useState("2x2");
   const [players, setPlayers] = useState<PlayerAlignment[]>(() =>
@@ -61,6 +64,7 @@ export function Designer() {
     savePlay(play);
     setCurrentId(play.id);
     setStatus("Saved on this device.");
+    return play.id;
   };
   const load = (p: SavedPlay) => {
     setName(p.name);
@@ -133,6 +137,17 @@ export function Designer() {
           <Download size={15} />
           Export
         </button>
+        {SANDBOX_FORMATIONS.includes(formationId) && (
+          <button
+            className="button secondary"
+            onClick={() => {
+              const id = save();
+              router.push(`/sandbox?play=${encodeURIComponent(id)}`);
+            }}
+          >
+            Save & test in 7-on-7
+          </button>
+        )}
         <span className="save-status" role="status">
           {status && <Check size={14} />} {status}
         </span>

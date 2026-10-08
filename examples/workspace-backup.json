@@ -1,0 +1,487 @@
+{
+  "version": 2,
+  "progress": {
+    "version": 1,
+    "lessons": {},
+    "recent": [],
+    "training": {
+      "attempts": 0,
+      "correct": 0,
+      "coverageCorrect": 0,
+      "conflictCorrect": 0
+    }
+  },
+  "plays": [
+    {
+      "id": "example-designer-play",
+      "name": "Synthetic vertical and shallow",
+      "formationId": "2x2",
+      "players": [
+        {
+          "id": "LT",
+          "label": "LT",
+          "position": "OL",
+          "side": "offense",
+          "x": 40,
+          "y": 72
+        },
+        {
+          "id": "LG",
+          "label": "LG",
+          "position": "OL",
+          "side": "offense",
+          "x": 45,
+          "y": 72
+        },
+        {
+          "id": "C",
+          "label": "C",
+          "position": "OL",
+          "side": "offense",
+          "x": 50,
+          "y": 72
+        },
+        {
+          "id": "RG",
+          "label": "RG",
+          "position": "OL",
+          "side": "offense",
+          "x": 55,
+          "y": 72
+        },
+        {
+          "id": "RT",
+          "label": "RT",
+          "position": "OL",
+          "side": "offense",
+          "x": 60,
+          "y": 72
+        },
+        {
+          "id": "X",
+          "label": "X",
+          "position": "WR",
+          "side": "offense",
+          "x": 12,
+          "y": 72
+        },
+        {
+          "id": "H",
+          "label": "H",
+          "position": "WR",
+          "side": "offense",
+          "x": 28,
+          "y": 75
+        },
+        {
+          "id": "Y",
+          "label": "Y",
+          "position": "TE",
+          "side": "offense",
+          "x": 72,
+          "y": 75
+        },
+        {
+          "id": "Z",
+          "label": "Z",
+          "position": "WR",
+          "side": "offense",
+          "x": 88,
+          "y": 72
+        },
+        {
+          "id": "QB",
+          "label": "QB",
+          "position": "QB",
+          "side": "offense",
+          "x": 50,
+          "y": 83
+        },
+        {
+          "id": "RB",
+          "label": "RB",
+          "position": "RB",
+          "side": "offense",
+          "x": 59,
+          "y": 85
+        }
+      ],
+      "routes": [
+        {
+          "playerId": "X",
+          "routeType": "go",
+          "waypoints": [
+            {
+              "x": 12,
+              "y": 72
+            },
+            {
+              "x": 12,
+              "y": 16
+            }
+          ]
+        },
+        {
+          "playerId": "Y",
+          "routeType": "shallow",
+          "waypoints": [
+            {
+              "x": 72,
+              "y": 75
+            },
+            {
+              "x": 64,
+              "y": 69
+            },
+            {
+              "x": 17,
+              "y": 69
+            }
+          ]
+        }
+      ],
+      "updatedAt": "2026-10-08T10:13:15.432Z"
+    }
+  ],
+  "profiles": [
+    {
+      "id": "default",
+      "name": "Uncalibrated baseline",
+      "ratings": {
+        "speed": 50,
+        "acceleration": 50,
+        "changeOfDirection": 50,
+        "reaction": 50,
+        "manCoverage": 50,
+        "zoneDiscipline": 50
+      },
+      "uncertainty": 15,
+      "confidence": "unrated",
+      "notes": "Illustrative movement assumptions. No film or tracking calibration has been applied.",
+      "observations": [],
+      "updatedAt": "1970-01-01T00:00:00.000Z"
+    }
+  ],
+  "scenarios": [
+    {
+      "modelVersion": "assignment-movement-v1",
+      "profileSnapshot": {
+        "id": "default",
+        "name": "Uncalibrated baseline",
+        "ratings": {
+          "speed": 50,
+          "acceleration": 50,
+          "changeOfDirection": 50,
+          "reaction": 50,
+          "manCoverage": 50,
+          "zoneDiscipline": 50
+        },
+        "uncertainty": 15,
+        "confidence": "unrated",
+        "notes": "Illustrative movement assumptions. No film or tracking calibration has been applied.",
+        "observations": [],
+        "updatedAt": "1970-01-01T00:00:00.000Z"
+      },
+      "version": 1,
+      "id": "example-mesh-cover1",
+      "name": "Synthetic Mesh vs Cover 1",
+      "formationId": "2x2",
+      "conceptId": "mesh",
+      "coverageId": "cover1",
+      "players": [
+        {
+          "id": "C",
+          "label": "C",
+          "position": "OL",
+          "side": "offense",
+          "x": 50,
+          "y": 72
+        },
+        {
+          "id": "X",
+          "label": "X",
+          "position": "WR",
+          "side": "offense",
+          "x": 12,
+          "y": 72
+        },
+        {
+          "id": "H",
+          "label": "H",
+          "position": "WR",
+          "side": "offense",
+          "x": 28,
+          "y": 75
+        },
+        {
+          "id": "Y",
+          "label": "Y",
+          "position": "TE",
+          "side": "offense",
+          "x": 72,
+          "y": 75
+        },
+        {
+          "id": "Z",
+          "label": "Z",
+          "position": "WR",
+          "side": "offense",
+          "x": 88,
+          "y": 72
+        },
+        {
+          "id": "QB",
+          "label": "QB",
+          "position": "QB",
+          "side": "offense",
+          "x": 50,
+          "y": 83
+        },
+        {
+          "id": "RB",
+          "label": "RB",
+          "position": "RB",
+          "side": "offense",
+          "x": 59,
+          "y": 85
+        }
+      ],
+      "routes": [
+        {
+          "playerId": "X",
+          "routeType": "shallow",
+          "waypoints": [
+            {
+              "x": 12,
+              "y": 72
+            },
+            {
+              "x": 22,
+              "y": 63
+            },
+            {
+              "x": 83,
+              "y": 63
+            }
+          ]
+        },
+        {
+          "playerId": "H",
+          "routeType": "sit",
+          "waypoints": [
+            {
+              "x": 28,
+              "y": 75
+            },
+            {
+              "x": 44,
+              "y": 51
+            },
+            {
+              "x": 49,
+              "y": 51
+            }
+          ]
+        },
+        {
+          "playerId": "Y",
+          "routeType": "shallow",
+          "waypoints": [
+            {
+              "x": 72,
+              "y": 75
+            },
+            {
+              "x": 62,
+              "y": 60
+            },
+            {
+              "x": 17,
+              "y": 60
+            }
+          ]
+        },
+        {
+          "playerId": "Z",
+          "routeType": "corner",
+          "waypoints": [
+            {
+              "x": 88,
+              "y": 72
+            },
+            {
+              "x": 82,
+              "y": 44
+            },
+            {
+              "x": 95,
+              "y": 24
+            }
+          ]
+        },
+        {
+          "playerId": "RB",
+          "routeType": "check-release",
+          "waypoints": [
+            {
+              "x": 59,
+              "y": 85
+            },
+            {
+              "x": 62,
+              "y": 76
+            },
+            {
+              "x": 70,
+              "y": 65
+            },
+            {
+              "x": 87,
+              "y": 64
+            }
+          ]
+        }
+      ],
+      "receivers": {
+        "X": {
+          "speed": 50,
+          "releaseDelay": 0
+        },
+        "H": {
+          "speed": 50,
+          "releaseDelay": 0
+        },
+        "Y": {
+          "speed": 50,
+          "releaseDelay": 0
+        },
+        "Z": {
+          "speed": 50,
+          "releaseDelay": 0
+        },
+        "RB": {
+          "speed": 50,
+          "releaseDelay": 0
+        }
+      },
+      "defenders": {
+        "W": {
+          "x": 39,
+          "y": 56,
+          "cushion": 0,
+          "assignment": {
+            "defenderId": "W",
+            "type": "man",
+            "destination": {
+              "x": 39,
+              "y": 42
+            },
+            "responsibility": "Carry RB in man coverage. Exact leverage and switch rules depend on the call.",
+            "leverage": "Maintain leverage according to help and the call.",
+            "targetId": "RB"
+          }
+        },
+        "M": {
+          "x": 54,
+          "y": 56,
+          "cushion": 0,
+          "assignment": {
+            "defenderId": "M",
+            "type": "zone",
+            "destination": {
+              "x": 50.5,
+              "y": 52.5
+            },
+            "responsibility": "Protect the low hole. Relate to receivers entering the area; landmarks are teaching aids, not walls.",
+            "leverage": "Keep vision on threats entering your responsibility."
+          }
+        },
+        "A": {
+          "x": 72,
+          "y": 57,
+          "cushion": 0,
+          "assignment": {
+            "defenderId": "A",
+            "type": "man",
+            "destination": {
+              "x": 72,
+              "y": 43
+            },
+            "responsibility": "Carry Y in man coverage. Exact leverage and switch rules depend on the call.",
+            "leverage": "Maintain leverage according to help and the call.",
+            "targetId": "Y"
+          }
+        },
+        "CBL": {
+          "x": 12,
+          "y": 59,
+          "cushion": 0,
+          "assignment": {
+            "defenderId": "CBL",
+            "type": "man",
+            "destination": {
+              "x": 12,
+              "y": 45
+            },
+            "responsibility": "Carry X in man coverage. Exact leverage and switch rules depend on the call.",
+            "leverage": "Maintain leverage according to help and the call.",
+            "targetId": "X"
+          }
+        },
+        "CBR": {
+          "x": 88,
+          "y": 59,
+          "cushion": 0,
+          "assignment": {
+            "defenderId": "CBR",
+            "type": "man",
+            "destination": {
+              "x": 88,
+              "y": 45
+            },
+            "responsibility": "Carry Z in man coverage. Exact leverage and switch rules depend on the call.",
+            "leverage": "Maintain leverage according to help and the call.",
+            "targetId": "Z"
+          }
+        },
+        "SL": {
+          "x": 50,
+          "y": 24,
+          "cushion": 0,
+          "assignment": {
+            "defenderId": "SL",
+            "type": "zone",
+            "destination": {
+              "x": 50,
+              "y": 24.5
+            },
+            "responsibility": "Protect the deep middle. Relate to receivers entering the area; landmarks are teaching aids, not walls.",
+            "leverage": "Keep vision on threats entering your responsibility."
+          }
+        },
+        "SR": {
+          "x": 30,
+          "y": 57,
+          "cushion": 0,
+          "assignment": {
+            "defenderId": "SR",
+            "type": "man",
+            "destination": {
+              "x": 30,
+              "y": 43
+            },
+            "responsibility": "Carry H in man coverage. Exact leverage and switch rules depend on the call.",
+            "leverage": "Maintain leverage according to help and the call.",
+            "targetId": "H"
+          }
+        }
+      },
+      "profileId": "default",
+      "releaseTime": 2.4,
+      "pressureTime": 3.5,
+      "targetId": "Y",
+      "notes": "Synthetic assignment-review exercise. No coach review, measured opponent data, or outcome probabilities are implied.",
+      "updatedAt": "2026-10-08T10:13:15.063Z"
+    }
+  ]
+}

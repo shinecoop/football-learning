@@ -175,7 +175,14 @@ export type LessonKind =
   | "coverage"
   | "strategy"
   | "article";
+export interface ContentReview {
+  status: "pending" | "reviewed";
+  reviewer?: string;
+  reviewedAt?: string;
+  notes?: string;
+}
 export interface Lesson {
+  contentReview?: ContentReview;
   id: string;
   title: string;
   categoryId: string;

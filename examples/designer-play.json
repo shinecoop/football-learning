@@ -1,0 +1,128 @@
+{
+  "name": "Synthetic vertical and shallow",
+  "formationId": "2x2",
+  "players": [
+    {
+      "id": "LT",
+      "label": "LT",
+      "position": "OL",
+      "side": "offense",
+      "x": 40,
+      "y": 72
+    },
+    {
+      "id": "LG",
+      "label": "LG",
+      "position": "OL",
+      "side": "offense",
+      "x": 45,
+      "y": 72
+    },
+    {
+      "id": "C",
+      "label": "C",
+      "position": "OL",
+      "side": "offense",
+      "x": 50,
+      "y": 72
+    },
+    {
+      "id": "RG",
+      "label": "RG",
+      "position": "OL",
+      "side": "offense",
+      "x": 55,
+      "y": 72
+    },
+    {
+      "id": "RT",
+      "label": "RT",
+      "position": "OL",
+      "side": "offense",
+      "x": 60,
+      "y": 72
+    },
+    {
+      "id": "X",
+      "label": "X",
+      "position": "WR",
+      "side": "offense",
+      "x": 12,
+      "y": 72
+    },
+    {
+      "id": "H",
+      "label": "H",
+      "position": "WR",
+      "side": "offense",
+      "x": 28,
+      "y": 75
+    },
+    {
+      "id": "Y",
+      "label": "Y",
+      "position": "TE",
+      "side": "offense",
+      "x": 72,
+      "y": 75
+    },
+    {
+      "id": "Z",
+      "label": "Z",
+      "position": "WR",
+      "side": "offense",
+      "x": 88,
+      "y": 72
+    },
+    {
+      "id": "QB",
+      "label": "QB",
+      "position": "QB",
+      "side": "offense",
+      "x": 50,
+      "y": 83
+    },
+    {
+      "id": "RB",
+      "label": "RB",
+      "position": "RB",
+      "side": "offense",
+      "x": 59,
+      "y": 85
+    }
+  ],
+  "routes": [
+    {
+      "playerId": "X",
+      "routeType": "go",
+      "waypoints": [
+        {
+          "x": 12,
+          "y": 72
+        },
+        {
+          "x": 12,
+          "y": 16
+        }
+      ]
+    },
+    {
+      "playerId": "Y",
+      "routeType": "shallow",
+      "waypoints": [
+        {
+          "x": 72,
+          "y": 75
+        },
+        {
+          "x": 64,
+          "y": 69
+        },
+        {
+          "x": 17,
+          "y": 69
+        }
+      ]
+    }
+  ]
+}

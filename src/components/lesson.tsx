@@ -66,7 +66,9 @@ export function LessonPage({ id }: { id: string }) {
         </span>
         <span>
           <Lightbulb size={14} />
-          System-aware teaching
+          {lesson.contentReview?.status === "reviewed"
+            ? `Review recorded: ${lesson.contentReview.reviewer ?? "coach"}`
+            : "Coach review pending"}
         </span>
       </div>
       <div className="lesson-tabs" role="tablist" aria-label="Lesson sections">
