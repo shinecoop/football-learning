@@ -2,3 +2,8 @@ node_modules/
 .next/
 *.tsbuildinfo
 work/
+
+# Local environment files may contain credentials.
+.env
+.env.*
+!.env.example
