@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import {
   Clock,
@@ -8,12 +8,123 @@ import {
   ArrowRight,
   BookOpen,
   Lightbulb,
+  ExternalLink,
 } from "lucide-react";
 import { getLesson, categories } from "@/domain/curriculum";
 import { useStore, markLesson, viewLesson, blankMastery } from "@/lib/store";
 import { PassingLab } from "./passing-lab";
 import { FoundationLab } from "./foundation-lab";
 import { PageHeading, Tag, CheckLabel } from "./ui";
+interface VideoPlayer {
+  playVideo: () => void;
+  pauseVideo: () => void;
+  mute: () => void;
+  destroy: () => void;
+}
+interface YouTubeAPI {
+  ready: (callback: () => void) => void;
+  Player: new (element: HTMLElement, options: {
+    host: string;
+    videoId: string;
+    width: string;
+    height: string;
+    playerVars: Record<string, string | number>;
+    events: { onReady: (event: { target: VideoPlayer }) => void };
+  }) => VideoPlayer;
+}
+
+const lessonFilms: Partial<Record<string, { videoId: string; prompt: string }>> = {
+  "four-verticals": {
+    videoId: "HH5_pZqMGbE",
+    prompt:
+      "Look for the four vertical lanes, then follow the inside receivers and the safeties. Who carries each seam, and where does help come from? Use the diagram next to compare the spacing against different coverages.",
+  },
+  sail: {
+    videoId: "K_3kxjsMiyQ",
+    prompt:
+      "Find the deep route, the intermediate sail, and the flat route on the same side. Watch how the defense rotates after the snap and how the underneath defender responds to the two shorter routes. Use the diagram next to compare the three-level spacing against different coverages.",
+  },
+};
+
+function LessonVideo({ videoId, title }: { videoId: string; title: string }) {
+  const container = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const element = container.current;
+    if (!element) return;
+    let player: VideoPlayer | undefined;
+    let ready = false;
+    let visible = false;
+    let disposed = false;
+    let started = false;
+    const syncPlayback = () => {
+      if (!ready || !player) return;
+      if (visible && !document.hidden) player.playVideo();
+      else player.pauseVideo();
+    };
+    const initialize = () => {
+      const api = (window as Window & { YT?: YouTubeAPI }).YT;
+      api?.ready(() => {
+        if (disposed || started) return;
+        started = true;
+        const target = document.createElement("div");
+        element.appendChild(target);
+        player = new api.Player(target, {
+          host: "https://www.youtube-nocookie.com",
+          videoId,
+          width: "100%",
+          height: "100%",
+          playerVars: {
+            controls: 0,
+            playsinline: 1,
+            disablekb: 1,
+            fs: 0,
+            origin: window.location.origin,
+          },
+          events: {
+            onReady: ({ target }) => {
+              player = target;
+              ready = true;
+              target.mute();
+              const iframe = element.querySelector("iframe");
+              if (iframe) iframe.title = `${title} — muted video study`;
+              syncPlayback();
+            },
+          },
+        });
+      });
+    };
+    const observer = new IntersectionObserver(([entry]) => {
+      visible = entry.isIntersecting && entry.intersectionRatio >= 0.5;
+      if (visible) {
+        let script = document.getElementById("youtube-iframe-api") as HTMLScriptElement | null;
+        if (!script) {
+          script = document.createElement("script");
+          script.id = "youtube-iframe-api";
+          script.src = "https://www.youtube.com/iframe_api";
+          script.async = true;
+          document.head.appendChild(script);
+        }
+        script.addEventListener("load", initialize, { once: true });
+        initialize();
+      }
+      syncPlayback();
+    }, { threshold: [0, 0.5] });
+    observer.observe(element);
+    document.addEventListener("visibilitychange", syncPlayback);
+    return () => {
+      disposed = true;
+      observer.disconnect();
+      document.removeEventListener("visibilitychange", syncPlayback);
+      document.getElementById("youtube-iframe-api")?.removeEventListener("load", initialize);
+      player?.destroy();
+      element.replaceChildren();
+    };
+  }, [videoId, title]);
+
+  return <div ref={container} className="lesson-film-player" />;
+}
+
 export function LessonPage({ id }: { id: string }) {
   const lesson = getLesson(id);
   const { progress } = useStore();
@@ -38,6 +149,7 @@ export function LessonPage({ id }: { id: string }) {
   const mastery = progress.lessons[id] ?? blankMastery;
   const interactive = !["strategy", "article"].includes(lesson.kind);
   const category = categories.find((c) => c.id === lesson.categoryId);
+  const film = lessonFilms[lesson.id];
   return (
     <>
       <Link href={`/learn/${lesson.categoryId}`} className="back-link">
@@ -105,6 +217,31 @@ export function LessonPage({ id }: { id: string }) {
                   <p>{s.body}</p>
                 </section>
               ))}
+              {film && (
+                <section className="panel lesson-film" aria-labelledby="lesson-film-title">
+                  <span className="eyebrow">WATCH & RECOGNIZE</span>
+                  <h2 id="lesson-film-title">Take the concept to film.</h2>
+                  <p>{film.prompt}</p>
+                  <LessonVideo
+                    key={film.videoId}
+                    videoId={film.videoId}
+                    title={lesson.title}
+                  />
+                  <div className="lesson-film-footer">
+                    <span>Plays muted while in view. For sound or playback controls, watch on YouTube.</span>
+                    <a
+                      className="arrow-link"
+                      href={`https://www.youtube.com/watch?v=${film.videoId}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      Watch on YouTube
+                      <ExternalLink size={14} aria-hidden="true" />
+                      <span className="sr-only"> (opens in a new tab)</span>
+                    </a>
+                  </div>
+                </section>
+              )}
               {interactive && (
                 <button
                   className="button primary"
