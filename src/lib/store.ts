@@ -1,4 +1,10 @@
 "use client";
+import type {
+  PlayerProfile,
+  SavedGame,
+  LessonFilm,
+} from "@/domain/workspace-extras";
+import { parsePlayerProfile, parseGame, parseFilm } from "./workspace-codec";
 import { useSyncExternalStore } from "react";
 import type { Mastery, SavedPlay } from "@/domain/types";
 import type { OpponentProfile, SandboxScenario } from "@/domain/sandbox";
@@ -253,5 +259,63 @@ export function restoreWorkspace(
     plays: merge(snapshot.plays, imported.plays),
     profiles: merge(snapshot.profiles, imported.profiles),
     scenarios: merge(snapshot.scenarios, imported.scenarios),
+    playerProfiles: merge(snapshot.playerProfiles, imported.playerProfiles),
+    games: merge(snapshot.games, imported.games),
+    films: merge(snapshot.films, imported.films),
+  });
+}
+
+export function savePlayerProfile(value: PlayerProfile) {
+  hydrate();
+  const p = parsePlayerProfile(value);
+  update({
+    ...snapshot,
+    playerProfiles: [
+      p,
+      ...snapshot.playerProfiles.filter((x) => x.id !== p.id),
+    ],
+  });
+}
+export function saveGame(value: SavedGame) {
+  hydrate();
+  const g = parseGame(value);
+  update({
+    ...snapshot,
+    games: [g, ...snapshot.games.filter((x) => x.id !== g.id)],
+  });
+}
+export function saveFilm(value: LessonFilm) {
+  hydrate();
+  const f = parseFilm(value);
+  update({
+    ...snapshot,
+    films: [f, ...snapshot.films.filter((x) => x.id !== f.id)],
+  });
+}
+export function deleteExtra(
+  kind: "games" | "playerProfiles" | "films",
+  id: string,
+) {
+  hydrate();
+  update({ ...snapshot, [kind]: snapshot[kind].filter((x) => x.id !== id) });
+}
+export function importPlayers(raw: string) {
+  if (raw.length > 2000000)
+    throw new Error("Player library is too large. Use a file under 2 MB.");
+  const data: unknown = JSON.parse(raw);
+  if (!Array.isArray(data) || data.length > 300)
+    throw new Error("Choose a player library JSON array (up to 300 players).");
+  const players = data.map(parsePlayerProfile);
+  if (new Set(players.map((p) => p.id)).size !== players.length)
+    throw new Error("Player library contains duplicate IDs.");
+  hydrate();
+  update({
+    ...snapshot,
+    playerProfiles: [
+      ...snapshot.playerProfiles.filter(
+        (p) => !players.some((x) => x.id === p.id),
+      ),
+      ...players,
+    ],
   });
 }

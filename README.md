@@ -4,6 +4,14 @@ A local-first football classroom and a transparent seven-on-seven scenario sandb
 
 **Current boundary:** a working scenario-testing and teaching tool, not a calibrated opponent predictor. No completion probabilities, NFL-derived player ratings, or claims of coach review are fabricated.
 
+## Dark game workspace update
+
+The app now uses centered **Learn / Sandbox / Glossary** navigation and a dark green gradient theme. In Sandbox, open **Game & player setup** to build a player library, assign offense/defense profiles, and save a named game snapshot. **Standard** applies baseline ratings to everyone. Players can be exported/imported separately; full workspace backups also include games and film metadata.
+
+Each ready lesson has a **Game clips** tab with native video uploads, direct HTTPS video sources, camera selection, camera synchronization offsets, and manual timed highlights. Local videos live in IndexedDB, not JSON backups: retain originals and relink when changing devices. Automatic player tracking remains future work.
+
+See [the redesign report](docs/dark-workspace-report.md) for delivered behavior, verification, boundaries, and next steps.
+
 ## Run
 
 Use Node 22 (CI) or Node 24 and pnpm 11.19.0:

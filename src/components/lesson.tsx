@@ -1,4 +1,5 @@
 "use client";
+import { FilmRoom } from "./film-room";
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import {
@@ -77,6 +78,7 @@ export function LessonPage({ id }: { id: string }) {
           ...(interactive
             ? [{ id: "diagram", label: "Interactive diagram" }]
             : []),
+          { id: "film", label: "Game clips" },
           { id: "ideas", label: "Key ideas & mistakes" },
           ...(lesson.quiz ? [{ id: "quiz", label: "Knowledge check" }] : []),
         ].map((t) => (
@@ -95,6 +97,7 @@ export function LessonPage({ id }: { id: string }) {
         ))}
       </div>
       <div role="tabpanel">
+        {tab === "film" && <FilmRoom lessonId={id} title={lesson.title} />}
         {tab === "overview" && (
           <div className="lesson-overview">
             <div className="lesson-reading">

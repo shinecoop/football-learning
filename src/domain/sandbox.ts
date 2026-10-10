@@ -1,3 +1,4 @@
+import type { PlayerProfile } from "./workspace-extras";
 import type {
   Coverage,
   CoverageZone,
@@ -71,6 +72,7 @@ export interface DefenderSettings {
 export interface SandboxScenario {
   modelVersion: string;
   profileSnapshot?: OpponentProfile;
+  lineup?: Record<string, PlayerProfile>;
   version: 1;
   id: string;
   name: string;

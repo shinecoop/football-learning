@@ -1,4 +1,5 @@
 "use client";
+import { GameWorkspace } from "./game-workspace";
 import { useState, useMemo } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
@@ -262,6 +263,7 @@ function SandboxWorkspace({ initial }: { initial?: SandboxScenario }) {
           Start with an idea, then compare the assumptions.
         </p>
       </div>
+      <GameWorkspace scenario={scenario} update={update} load={loadScenario} />
       <SandboxToolbar
         scenario={scenario}
         drawing={drawing}

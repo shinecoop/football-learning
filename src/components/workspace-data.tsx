@@ -83,7 +83,7 @@ export function WorkspaceDataPage() {
       <PageHeading
         eyebrow="LOCAL FIRST · PORTABLE BY DESIGN"
         title="Keep your work with you."
-        description="Back up routes, opponent observations, scenarios, and learning progress without a server."
+        description="Back up games, player libraries, routes, opponent observations, clip settings, and learning progress. Video files stay on this device; keep originals for relinking."
         action={
           <button
             className="button primary"
@@ -114,6 +114,9 @@ export function WorkspaceDataPage() {
           { label: "Saved designer plays", count: store.plays.length },
           { label: "Opponent profiles", count: store.profiles.length },
           { label: "Saved scenarios", count: store.scenarios.length },
+          { label: "Saved games", count: store.games.length },
+          { label: "Player profiles", count: store.playerProfiles.length },
+          { label: "Lesson film rooms", count: store.films.length },
           {
             label: "Learning records",
             count: Object.keys(store.progress.lessons).length,
@@ -213,8 +216,11 @@ export function WorkspaceDataPage() {
               {preview ? (
                 <>
                   <p>
-                    {preview.plays.length} plays · {preview.profiles.length}{" "}
-                    profiles · {preview.scenarios.length} scenarios ·{" "}
+                    {preview.games.length} games ·{" "}
+                    {preview.playerProfiles.length} players ·{" "}
+                    {preview.films.length} film rooms · {preview.plays.length}{" "}
+                    plays · {preview.profiles.length} profiles ·{" "}
+                    {preview.scenarios.length} scenarios ·{" "}
                     {Object.keys(preview.progress.lessons).length} learning
                     records
                   </p>

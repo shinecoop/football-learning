@@ -1,4 +1,9 @@
 import type {
+  PlayerProfile,
+  SavedGame,
+  LessonFilm,
+} from "@/domain/workspace-extras";
+import type {
   Mastery,
   PlayerAlignment,
   Route,
@@ -30,6 +35,9 @@ export interface WorkspaceData {
   plays: SavedPlay[];
   profiles: OpponentProfile[];
   scenarios: SandboxScenario[];
+  playerProfiles: PlayerProfile[];
+  games: SavedGame[];
+  films: LessonFilm[];
 }
 const object = (value: unknown): Record<string, unknown> => {
   if (!value || typeof value !== "object" || Array.isArray(value))
@@ -287,7 +295,19 @@ export function parseScenario(value: unknown): SandboxScenario {
     : undefined;
   if (profileSnapshot && profileSnapshot.id !== profileId)
     throw new Error("Profile snapshot does not match the scenario profile ID.");
+  const lineup: Record<string, PlayerProfile> = {};
+  for (const [actorId, raw] of Object.entries(object(v.lineup ?? {}))) {
+    if (!RECEIVER_IDS.includes(actorId) && !Object.hasOwn(defenders, actorId))
+      throw new Error("Unknown lineup position.");
+    const profile = parsePlayerProfile(raw);
+    if (
+      profile.side !== (RECEIVER_IDS.includes(actorId) ? "offense" : "defense")
+    )
+      throw new Error("Player profile side does not match lineup position.");
+    lineup[actorId] = profile;
+  }
   return {
+    ...(v.lineup ? { lineup } : {}),
     modelVersion: SANDBOX_MODEL_VERSION,
     ...(profileSnapshot ? { profileSnapshot } : {}),
     version: 1,
@@ -365,6 +385,9 @@ export function emptyWorkspace(): WorkspaceData {
     plays: [],
     profiles: [newProfile()],
     scenarios: [],
+    playerProfiles: [],
+    games: [],
+    films: [],
   };
 }
 export function parseWorkspace(value: unknown): WorkspaceData {
@@ -389,6 +412,12 @@ export function parseWorkspace(value: unknown): WorkspaceData {
     plays: uniqueIds(list(v.plays, 300).map(parseSavedPlay), "Saved plays"),
     profiles,
     scenarios,
+    playerProfiles: uniqueIds(
+      list(v.playerProfiles ?? [], 300).map(parsePlayerProfile),
+      "Players",
+    ),
+    games: uniqueIds(list(v.games ?? [], 300).map(parseGame), "Games"),
+    films: uniqueIds(list(v.films ?? [], 300).map(parseFilm), "Films"),
   };
 }
 export function decodeBackup(text: string): WorkspaceData {
@@ -422,4 +451,79 @@ export function decodeDesignerPlay(
   }
   const source = object(value);
   return parseSavedPlay({ ...source, id: playId, updatedAt });
+}
+
+export function parsePlayerProfile(value: unknown): PlayerProfile {
+  const v = object(value);
+  if (v.side !== "offense" && v.side !== "defense")
+    throw new Error("Invalid player side.");
+  return {
+    id: id(v.id),
+    name: text(v.name, 100, false),
+    side: v.side,
+    ratings: parseRatings(v.ratings),
+    releaseDelay: number(v.releaseDelay, 0, 2),
+    notes: text(v.notes),
+  };
+}
+export function parseGame(value: unknown): SavedGame {
+  const v = object(value);
+  return {
+    id: id(v.id),
+    name: text(v.name, 100, false),
+    opponent: text(v.opponent, 100),
+    scenario: parseScenario(v.scenario),
+    updatedAt: text(v.updatedAt, 100),
+  };
+}
+export function parseFilm(value: unknown): LessonFilm {
+  const v = object(value);
+  return {
+    id: id(v.id),
+    lessonId: id(v.lessonId),
+    title: text(v.title, 100, false),
+    cameras: uniqueIds(
+      list(v.cameras, 12).map((value) => {
+        const c = object(value);
+        if (typeof c.local !== "boolean")
+          throw new Error("Invalid camera source.");
+        const source = text(c.source, 2000, false);
+        if (c.local) id(source);
+        else {
+          const url = new URL(source);
+          if (
+            url.protocol !== "https:" ||
+            /(^|\.)(youtube\.com|youtu\.be)$/.test(url.hostname)
+          )
+            throw new Error(
+              "Use a direct HTTPS video file, not a YouTube link.",
+            );
+        }
+        return {
+          id: id(c.id),
+          label: text(c.label, 100, false),
+          source,
+          local: c.local,
+          offset: number(c.offset, -3600, 3600),
+          focus: uniqueIds(
+            list(c.focus, 100).map((value) => {
+              const f = object(value);
+              const start = number(f.start, 0, 86400),
+                end = number(f.end, start, 86400);
+              return {
+                id: id(f.id),
+                label: text(f.label, 100, false),
+                start,
+                end,
+                x: number(f.x, 0, 100),
+                y: number(f.y, 0, 100),
+              };
+            }),
+            "Focus marks",
+          ),
+        };
+      }),
+      "Cameras",
+    ),
+  };
 }
