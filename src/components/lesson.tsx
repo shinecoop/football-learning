@@ -178,7 +178,9 @@ export function LessonPage({ id }: { id: string }) {
         </span>
         <span>
           <Lightbulb size={14} />
-          System-aware teaching
+          {lesson.contentReview?.status === "reviewed"
+            ? `Review recorded: ${lesson.contentReview.reviewer ?? "coach"}`
+            : "Coach review pending"}
         </span>
       </div>
       <div className="lesson-tabs" role="tablist" aria-label="Lesson sections">
@@ -187,6 +189,7 @@ export function LessonPage({ id }: { id: string }) {
           ...(interactive
             ? [{ id: "diagram", label: "Interactive diagram" }]
             : []),
+          { id: "film", label: "Game clips" },
           { id: "ideas", label: "Key ideas & mistakes" },
           ...(lesson.quiz ? [{ id: "quiz", label: "Knowledge check" }] : []),
         ].map((t) => (
@@ -205,6 +208,7 @@ export function LessonPage({ id }: { id: string }) {
         ))}
       </div>
       <div role="tabpanel">
+        {tab === "film" && <FilmRoom lessonId={id} title={lesson.title} />}
         {tab === "overview" && (
           <div className="lesson-overview">
             <div className="lesson-reading">
@@ -356,11 +360,14 @@ export function LessonPage({ id }: { id: string }) {
               ))}
             </div>
             {answer !== undefined && (
-              <div className="quiz-feedback">
+              <div
+                className={`quiz-feedback ${answer === lesson.quiz.answer ? "success" : "error"}`}
+                role="status"
+              >
                 <h3>
                   {answer === lesson.quiz.answer
                     ? "Correct."
-                    : "Keep the responsibilities in view."}
+                    : "Not quite. Keep the responsibilities in view."}
                 </h3>
                 <p>{lesson.quiz.explanation}</p>
                 <button

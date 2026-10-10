@@ -1,0 +1,25 @@
+{
+  "version": 1,
+  "snapshotId": "synthetic-27-example",
+  "edition": 27,
+  "label": "Synthetic pipeline test — NOT real Madden data",
+  "sourceUrl": "https://example.com/synthetic-fixture",
+  "capturedAt": "2026-10-10T00:00:00Z",
+  "licenseBasis": "Self-authored synthetic test data; no EA player data included",
+  "players": [
+    {
+      "sourceId": "test-wr-1",
+      "name": "Synthetic Receiver",
+      "team": "Example",
+      "position": "WR",
+      "ratings": { "SPD": 80, "ACC": 75, "CTH": 70, "SRR": 65 }
+    },
+    {
+      "sourceId": "test-cb-1",
+      "name": "Synthetic Corner",
+      "team": "Example",
+      "position": "CB",
+      "ratings": { "SPD": 78, "ACC": 76, "MCV": 72, "ZCV": 70 }
+    }
+  ]
+}
