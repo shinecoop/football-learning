@@ -2,38 +2,28 @@
 import { useState } from "react";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
-import {
-  Search,
-  BookOpen,
-  Waypoints,
-  PenTool,
-  Target,
-  Book,
-  LayoutDashboard,
-  ArrowUpRight,
-  Menu,
-  X,
-  ArrowRight,
-} from "lucide-react";
+import { Search, BookOpen, Waypoints, Book, X, ArrowRight } from "lucide-react";
 import { lessons, categories } from "@/domain/curriculum";
 import { glossary } from "@/domain/glossary";
-import { Dashboard, Curriculum, Glossary } from "./learning";
+import { Curriculum, Glossary } from "./learning";
 import { PassingLab } from "./passing-lab";
 import { LessonPage } from "./lesson";
 import { Designer } from "./designer";
 import { Training } from "./training";
+import { Sandbox } from "./sandbox";
+import { Profiles } from "./profiles";
+import { WorkspaceDataPage } from "./workspace-data";
+import { useStore } from "@/lib/store";
 const nav = [
-  { href: "/", label: "Overview", icon: LayoutDashboard },
   { href: "/learn", label: "Learn", icon: BookOpen },
-  { href: "/simulator", label: "Simulator", icon: Waypoints },
-  { href: "/designer", label: "Play designer", icon: PenTool },
-  { href: "/training", label: "Training", icon: Target },
+  { href: "/sandbox", label: "Sandbox", icon: Waypoints },
   { href: "/glossary", label: "Glossary", icon: Book },
 ];
 export function Application() {
+  const { storageError } = useStore();
   const path = usePathname();
   const [search, setSearch] = useState("");
-  const [mobile, setMobile] = useState(false);
+
   const query = search.trim().toLowerCase();
   const matches = query
     ? lessons
@@ -50,11 +40,14 @@ export function Application() {
   const parts = path.split("/").filter(Boolean);
   const active = parts[0] ?? "overview";
   let content: React.ReactNode;
-  if (active === "overview") content = <Dashboard />;
+  if (active === "overview") content = <Curriculum />;
   else if (active === "learn") content = <Curriculum categoryId={parts[1]} />;
   else if (active === "lesson")
     content = <LessonPage key={parts[1]} id={parts[1]} />;
   else if (active === "simulator") content = <PassingLab />;
+  else if (active === "sandbox") content = <Sandbox />;
+  else if (active === "profiles") content = <Profiles />;
+  else if (active === "workspace") content = <WorkspaceDataPage />;
   else if (active === "designer") content = <Designer />;
   else if (active === "training") content = <Training />;
   else if (active === "glossary") content = <Glossary />;
@@ -70,108 +63,38 @@ export function Application() {
       <a className="skip-link" href="#main">
         Skip to content
       </a>
-      <aside className={`sidebar ${mobile ? "mobile-open" : ""}`}>
-        <Link className="brand" href="/" onClick={() => setMobile(false)}>
-          <span className="brand-mark">
-            <i />
-            <i />
-            <i />
-          </span>
-          fieldwork<span className="brand-period">.</span>
-        </Link>
-        <div className="workspace-label">THE FOOTBALL CLASSROOM</div>
-        <nav aria-label="Main navigation">
-          {nav.map((n) => {
-            const selected =
-              n.href === "/"
-                ? path === "/"
-                : path.startsWith(n.href) ||
-                  (n.label === "Learn" && active === "lesson");
-            const Icon = n.icon;
-            return (
-              <Link
-                key={n.href}
-                className={`nav-item ${selected ? "selected" : ""}`}
-                href={n.href}
-                onClick={() => setMobile(false)}
-              >
-                <Icon size={18} strokeWidth={1.7} />
-                {n.label}
-                {n.label === "Simulator" && (
-                  <span className="nav-new">LAB</span>
-                )}
-              </Link>
-            );
-          })}
-        </nav>
-        <div className="sidebar-divider" />
-        <div className="sidebar-section-label">YOUR PLAYBOOK</div>
-        <Link className="small-nav" href="/learn/passing">
-          <span className="small-dot" />
-          Offensive concepts
-        </Link>
-        <Link className="small-nav" href="/learn/coverage">
-          <span className="small-dot muted" />
-          Defensive concepts
-        </Link>
-        <div className="sidebar-bottom">
-          <div className="sidebar-note">
-            <Waypoints size={23} />
-            <strong>See the game differently.</strong>
-            <p>
-              Understand the space.
-              <br />
-              Find the advantage.
-            </p>
-            <Link href="/simulator">
-              Enter the lab <ArrowUpRight size={14} />
-            </Link>
-          </div>
-          <div className="profile">
-            <span className="avatar">Y</span>
-            <div>
-              <strong>Your workspace</strong>
-              <span>Progress saved on this device</span>
-            </div>
-          </div>
-        </div>
-        <button
-          className="mobile-close icon-button"
-          aria-label="Close navigation"
-          onClick={() => setMobile(false)}
-        >
-          <X size={22} />
-        </button>
-      </aside>
-      {mobile && (
-        <button
-          className="sidebar-backdrop"
-          aria-label="Close menu"
-          onClick={() => setMobile(false)}
-        />
-      )}
       <div className="main-shell">
         <header className="topbar">
-          <div className="breadcrumbs">
-            <button
-              className="mobile-menu icon-button"
-              aria-label="Open navigation"
-              onClick={() => setMobile(true)}
-            >
-              <Menu size={22} />
-            </button>
-            <span>Workspace</span>
-            <span className="breadcrumb-slash">/</span>
-            <strong>
-              {active === "overview"
-                ? "Overview"
-                : active === "lesson"
-                  ? "Learn"
-                  : active === "designer"
-                    ? "Play designer"
-                    : active[0]?.toUpperCase() + active.slice(1)}
-            </strong>
-          </div>
+          <Link className="brand" href="/">
+            fieldwork<span className="brand-period">.</span>
+          </Link>
+          <nav className="primary-tabs" aria-label="Main navigation">
+            {nav.map((n) => {
+              const section =
+                active === "glossary"
+                  ? "Glossary"
+                  : [
+                        "sandbox",
+                        "simulator",
+                        "profiles",
+                        "designer",
+                        "workspace",
+                      ].includes(active)
+                    ? "Sandbox"
+                    : "Learn";
+              return (
+                <Link
+                  key={n.href}
+                  href={n.href}
+                  className={section === n.label ? "selected" : ""}
+                  aria-current={section === n.label ? "page" : undefined}
+                >
+                  <n.icon size={16} />
+                  {n.label}
+                </Link>
+              );
+            })}
+          </nav>
           <div className="search-container">
             <Search size={16} />
             <input
@@ -244,12 +167,44 @@ export function Application() {
               </div>
             )}
           </div>
-          <span className="topbar-status">
-            <i />
-            FOUNDATION EDITION
-          </span>
         </header>
+        <nav className="section-nav" aria-label="Workspace tools">
+          {([
+            "sandbox",
+            "simulator",
+            "profiles",
+            "designer",
+            "workspace",
+          ].includes(active)
+            ? [
+                ["/sandbox", "Game simulator"],
+                ["/profiles", "Opponent profiles"],
+                ["/designer", "Play designer"],
+                ["/simulator", "Concept lab"],
+                ["/workspace", "Import / export"],
+              ]
+            : active === "glossary"
+              ? []
+              : [
+                  ["/learn", "Curriculum"],
+                  ["/training", "Practice"],
+                ]
+          ).map(([href, label]) => (
+            <Link
+              key={href}
+              href={href}
+              className={path === href ? "active" : ""}
+            >
+              {label}
+            </Link>
+          ))}
+        </nav>
         <main id="main" className="page-content">
+          {storageError && (
+            <div className="storage-warning" role="alert">
+              {storageError} <Link href="/workspace">Open Workspace Data</Link>
+            </div>
+          )}
           {content}
         </main>
         <footer className="app-footer">

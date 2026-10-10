@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { notFound } from "next/navigation";
+import { redirect, notFound } from "next/navigation";
 import { Application } from "@/components/application";
 import { categories, getLesson } from "@/domain/curriculum";
 type Props = { params: Promise<{ slug?: string[] }> };
@@ -17,6 +17,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
               designer: "Play designer",
               training: "Training",
               glossary: "Glossary",
+              sandbox: "7-on-7 sandbox",
+              profiles: "Opponent profiles",
+              workspace: "Workspace data",
             } as Record<string, string>
           )[slug[0]];
   return {
@@ -25,10 +28,19 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 export default async function Page({ params }: Props) {
   const { slug = [] } = await params;
+  if (slug.length === 0) redirect("/learn");
   const [section, id] = slug;
   const valid =
     slug.length === 0 ||
-    (["simulator", "designer", "training", "glossary"].includes(section) &&
+    ([
+      "simulator",
+      "designer",
+      "training",
+      "glossary",
+      "sandbox",
+      "profiles",
+      "workspace",
+    ].includes(section) &&
       slug.length === 1) ||
     (section === "learn" &&
       slug.length <= 2 &&

@@ -1,0 +1,17 @@
+{
+  "id": "default",
+  "name": "Uncalibrated baseline",
+  "ratings": {
+    "speed": 50,
+    "acceleration": 50,
+    "changeOfDirection": 50,
+    "reaction": 50,
+    "manCoverage": 50,
+    "zoneDiscipline": 50
+  },
+  "uncertainty": 15,
+  "confidence": "unrated",
+  "notes": "Illustrative movement assumptions. No film or tracking calibration has been applied.",
+  "observations": [],
+  "updatedAt": "1970-01-01T00:00:00.000Z"
+}

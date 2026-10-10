@@ -167,3 +167,16 @@ describe("curriculum integrity", () => {
     }
   });
 });
+
+describe("content review transparency", () => {
+  it("requires reviewer attribution and a valid date for any recorded review", () => {
+    for (const lesson of lessons) {
+      if (lesson.contentReview?.status === "reviewed") {
+        expect(lesson.contentReview.reviewer?.trim().length).toBeGreaterThan(0);
+        expect(
+          Number.isFinite(Date.parse(lesson.contentReview.reviewedAt ?? "")),
+        ).toBe(true);
+      }
+    }
+  });
+});

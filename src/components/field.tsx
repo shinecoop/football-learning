@@ -37,6 +37,14 @@ interface Props {
   title?: string;
   hideCoverageNames?: boolean;
   preview?: boolean;
+  positions?: Record<string, Point>;
+  editableDefense?: boolean;
+  onFieldPoint?: (point: Point) => void;
+  editableWaypoints?: Point[];
+  onWaypointMove?: (index: number, point: Point) => void;
+  throwTarget?: string;
+  onMoveStart?: () => void;
+  onMoveEnd?: () => void;
 }
 export function FootballField({
   players,
@@ -61,10 +69,21 @@ export function FootballField({
   title = "Interactive football field",
   hideCoverageNames = false,
   preview = false,
+  positions,
+  editableDefense = false,
+  onFieldPoint,
+  editableWaypoints = [],
+  onWaypointMove,
+  throwTarget,
+  onMoveEnd,
+  onMoveStart,
 }: Props) {
   const unique = useId().replace(/:/g, "");
   const svg = useRef<SVGSVGElement>(null);
   const drag = useRef<string | null>(null);
+  const waypointDrag = useRef<number | null>(null);
+  const moved = useRef(false);
+  const suppressClick = useRef(false);
   const transformed = (p: Point) => (flipped ? flipPoint(p) : p);
   const offenseRoutes = routes.map((r) => offsetRoute(r, players));
   const fieldDefenders = defenders ?? coverage?.defenders ?? [];
@@ -75,20 +94,49 @@ export function FootballField({
         return `${q.x},${q.y}`;
       })
       .join(" ");
-  const move = (e: React.PointerEvent<SVGSVGElement>) => {
-    if (!drag.current || !onMove || !svg.current) return;
-    const matrix = svg.current.getScreenCTM();
+  const eventPoint = (e: {
+    clientX: number;
+    clientY: number;
+  }): Point | undefined => {
+    const matrix = svg.current?.getScreenCTM();
     if (!matrix) return;
-    const point = new DOMPoint(e.clientX, e.clientY).matrixTransform(
+    const p = new DOMPoint(e.clientX, e.clientY).matrixTransform(
       matrix.inverse(),
     );
-    onMove(drag.current, {
+    return {
       x:
-        Math.round(
-          Math.max(5, Math.min(95, flipped ? 100 - point.x : point.x)) * 10,
-        ) / 10,
-      y: Math.round(Math.max(71, Math.min(95, point.y)) * 10) / 10,
+        Math.round(Math.max(3, Math.min(97, flipped ? 100 - p.x : p.x)) * 10) /
+        10,
+      y: Math.round(Math.max(3, Math.min(97, p.y)) * 10) / 10,
+    };
+  };
+  const move = (e: React.PointerEvent<SVGSVGElement>) => {
+    const p = eventPoint(e);
+    if (!p) return;
+    if (waypointDrag.current !== null && onWaypointMove) {
+      moved.current = true;
+      onWaypointMove(waypointDrag.current, p);
+      return;
+    }
+    if (!drag.current || !onMove) return;
+    const defense = fieldDefenders.some((d) => d.id === drag.current);
+    moved.current = true;
+    onMove(drag.current, {
+      x: Math.max(
+        editableDefense ? 3 : 5,
+        Math.min(editableDefense ? 97 : 95, p.x),
+      ),
+      y: defense ? Math.min(69, p.y) : Math.max(71, Math.min(95, p.y)),
     });
+  };
+  const endDrag = () => {
+    suppressClick.current = Boolean(
+      moved.current || drag.current || waypointDrag.current !== null,
+    );
+    if (drag.current || waypointDrag.current !== null) onMoveEnd?.();
+    drag.current = null;
+    waypointDrag.current = null;
+    moved.current = false;
   };
   return (
     <div className="field-wrap">
@@ -100,11 +148,15 @@ export function FootballField({
         role="group"
         aria-label={title}
         onPointerMove={move}
-        onPointerUp={() => {
-          drag.current = null;
-        }}
-        onPointerCancel={() => {
-          drag.current = null;
+        onPointerUp={endDrag}
+        onPointerCancel={endDrag}
+        onClick={(e) => {
+          if (suppressClick.current) {
+            suppressClick.current = false;
+            return;
+          }
+          const p = eventPoint(e);
+          if (p && onFieldPoint && time === 0) onFieldPoint(p);
         }}
       >
         <title>{title}</title>
@@ -336,6 +388,7 @@ export function FootballField({
             pos = samplePath([p, { x: 50 + (p.x - 50) * 0.35, y: 83 }], time);
           else if (coverage)
             pos = defensivePosition(p, coverage, offenseRoutes, time);
+          if (positions?.[p.id]) pos = positions[p.id];
           const q = transformed(pos);
           const chosen = selected === p.id;
           const lit = highlight === p.id;
@@ -345,7 +398,10 @@ export function FootballField({
               role={onSelect ? "button" : undefined}
               tabIndex={onSelect ? 0 : undefined}
               aria-label={`${p.id}, ${p.position}, ${p.side}${lit ? ", key defender" : ""}`}
-              onClick={() => onSelect?.(p.id)}
+              onClick={(e) => {
+                e.stopPropagation();
+                onSelect?.(p.id);
+              }}
               onKeyDown={(e) => {
                 if (e.key === "Enter" || e.key === " ") {
                   e.preventDefault();
@@ -353,18 +409,19 @@ export function FootballField({
                 }
                 if (
                   onMove &&
-                  p.side === "offense" &&
+                  (p.side === "offense" || editableDefense) &&
                   time === 0 &&
                   ["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown"].includes(
                     e.key,
                   )
                 ) {
                   e.preventDefault();
+                  onMoveStart?.();
                   onMove(p.id, {
                     x: Math.max(
-                      5,
+                      editableDefense ? 3 : 5,
                       Math.min(
-                        95,
+                        editableDefense ? 97 : 95,
                         p.x +
                           (e.key === "ArrowLeft"
                             ? -1
@@ -375,9 +432,9 @@ export function FootballField({
                       ),
                     ),
                     y: Math.max(
-                      71,
+                      p.side === "defense" ? 3 : 71,
                       Math.min(
-                        95,
+                        p.side === "defense" ? 69 : 95,
                         p.y +
                           (e.key === "ArrowUp"
                             ? -1
@@ -387,11 +444,20 @@ export function FootballField({
                       ),
                     ),
                   });
+                  onMoveEnd?.();
                 }
               }}
               onPointerDown={(e) => {
+                e.stopPropagation();
                 onSelect?.(p.id);
-                if (onMove && p.side === "offense" && time === 0) {
+                moved.current = false;
+                suppressClick.current = false;
+                if (
+                  onMove &&
+                  (p.side === "offense" || editableDefense) &&
+                  time === 0
+                ) {
+                  onMoveStart?.();
                   drag.current = p.id;
                   svg.current?.setPointerCapture(e.pointerId);
                 }
@@ -399,7 +465,9 @@ export function FootballField({
               style={{
                 cursor: !onSelect
                   ? "default"
-                  : onMove && p.side === "offense" && time === 0
+                  : onMove &&
+                      (p.side === "offense" || editableDefense) &&
+                      time === 0
                     ? "grab"
                     : "pointer",
                 touchAction: "none",
@@ -450,6 +518,96 @@ export function FootballField({
                   {p.label}
                 </text>
               )}
+            </g>
+          );
+        })}
+        {throwTarget && positions?.QB && positions[throwTarget] && (
+          <line
+            x1={transformed(positions.QB).x}
+            y1={positions.QB.y}
+            x2={transformed(positions[throwTarget]).x}
+            y2={positions[throwTarget].y}
+            stroke="#edf4e7"
+            strokeWidth=".5"
+            strokeDasharray="1.3 .8"
+            pointerEvents="none"
+          />
+        )}
+        {editableWaypoints.map((p, index) => {
+          const q = transformed(p);
+          return (
+            <g
+              key={index}
+              role="button"
+              tabIndex={0}
+              aria-label={`Route waypoint ${index + 1}`}
+              onClick={(e) => e.stopPropagation()}
+              onPointerDown={(e) => {
+                e.stopPropagation();
+                if (time !== 0) return;
+                onMoveStart?.();
+                waypointDrag.current = index;
+                moved.current = false;
+                svg.current?.setPointerCapture(e.pointerId);
+              }}
+              onKeyDown={(e) => {
+                if (
+                  time === 0 &&
+                  ["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown"].includes(
+                    e.key,
+                  )
+                ) {
+                  e.preventDefault();
+                  onMoveStart?.();
+                  onWaypointMove?.(index, {
+                    x: Math.max(
+                      3,
+                      Math.min(
+                        97,
+                        p.x +
+                          (e.key === "ArrowLeft"
+                            ? -1
+                            : e.key === "ArrowRight"
+                              ? 1
+                              : 0) *
+                            (flipped ? -1 : 1),
+                      ),
+                    ),
+                    y: Math.max(
+                      3,
+                      Math.min(
+                        97,
+                        p.y +
+                          (e.key === "ArrowUp"
+                            ? -1
+                            : e.key === "ArrowDown"
+                              ? 1
+                              : 0),
+                      ),
+                    ),
+                  });
+                  onMoveEnd?.();
+                }
+              }}
+            >
+              <circle
+                cx={q.x}
+                cy={q.y}
+                r="1.4"
+                fill="#d9b8e5"
+                stroke="#fff"
+                strokeWidth=".3"
+              />
+              <text
+                x={q.x}
+                y={q.y + 0.5}
+                fontSize="1.1"
+                textAnchor="middle"
+                fill="#28372e"
+                pointerEvents="none"
+              >
+                {index + 1}
+              </text>
             </g>
           );
         })}
