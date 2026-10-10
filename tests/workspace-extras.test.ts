@@ -99,3 +99,24 @@ it("rejects executable URLs, YouTube embeds, and malformed focus ranges", () => 
     }),
   ).toThrow();
 });
+
+it("preserves two-way player skills in offense and defensive snapshots", () => {
+  const athlete = {
+    ...player,
+    side: "both",
+    positions: "WR / CB",
+    attributes: { strength: 72, catching: 85, tackling: 78 },
+  };
+  const parsed = parsePlayerProfile(athlete);
+  expect(parsed.attributes?.catching).toBe(85);
+  expect(parsed.attributes?.tackling).toBe(78);
+  expect(parsed.attributes?.passBlock).toBe(50);
+  const scenario = parseScenario({
+    ...createScenario(),
+    lineup: { X: parsed, CBL: parsed },
+  });
+  expect(scenario.lineup?.X).toEqual(scenario.lineup?.CBL);
+  expect(() =>
+    parsePlayerProfile({ ...athlete, attributes: { strength: -1 } }),
+  ).toThrow();
+});

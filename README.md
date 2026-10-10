@@ -4,13 +4,15 @@ A local-first football classroom and a transparent seven-on-seven scenario sandb
 
 **Current boundary:** a working scenario-testing and teaching tool, not a calibrated opponent predictor. No completion probabilities, NFL-derived player ratings, or claims of coach review are fabricated.
 
-## Dark game workspace update
+## Interface and game workspace
 
-The app now uses centered **Learn / Sandbox / Glossary** navigation and a dark green gradient theme. In Sandbox, open **Game & player setup** to build a player library, assign offense/defense profiles, and save a named game snapshot. **Standard** applies baseline ratings to everyone. Players can be exported/imported separately; full workspace backups also include games and film metadata.
+The app now uses centered **Learn / Sandbox / Glossary** navigation and a charcoal theme with white text and selective color accents. In Sandbox, open **Game & player setup** to build a player library, assign offense/defense profiles, and save a named game snapshot. **Standard** applies baseline ratings to everyone. Players can be exported/imported separately; full workspace backups also include games and film metadata.
 
 Each ready lesson has a **Game clips** tab with native video uploads, direct HTTPS video sources, camera selection, camera synchronization offsets, and manual timed highlights. Local videos live in IndexedDB, not JSON backups: retain originals and relink when changing devices. Automatic player tracking remains future work.
 
-See [the redesign report](docs/dark-workspace-report.md) for delivered behavior, verification, boundaries, and next steps.
+Player setup includes grouped skill sliders and two-way athletes. Additional skills are saved for future models; they do not expand the current simulation. Wrong-answer feedback is red, and the old Overview landing page has been removed.
+
+See [the latest interface report](docs/interface-refinement-report.md) and [the earlier redesign report](docs/dark-workspace-report.md) for delivered behavior, verification, boundaries, and next steps.
 
 ## Run
 
@@ -41,7 +43,7 @@ Browser tests reuse a development server locally. If none is running, run `pnpm 
 
 | Route                      | What it provides                                                                                           |
 | -------------------------- | ---------------------------------------------------------------------------------------------------------- |
-| `/`                        | Dashboard, curriculum, recent learning, and entry to the sandbox                                           |
+| `/`                        | Redirects directly to Curriculum                                                                           |
 | `/learn` and `/lesson/:id` | Shared data-driven lesson architecture                                                                     |
 | `/simulator`               | Existing concept/coverage teaching lab with deterministic schematic assignments                            |
 | `/sandbox`                 | New timed seven-on-seven scenario editor and replay                                                        |

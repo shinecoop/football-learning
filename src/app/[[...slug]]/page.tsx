@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { notFound } from "next/navigation";
+import { redirect, notFound } from "next/navigation";
 import { Application } from "@/components/application";
 import { categories, getLesson } from "@/domain/curriculum";
 type Props = { params: Promise<{ slug?: string[] }> };
@@ -28,6 +28,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 export default async function Page({ params }: Props) {
   const { slug = [] } = await params;
+  if (slug.length === 0) redirect("/learn");
   const [section, id] = slug;
   const valid =
     slug.length === 0 ||

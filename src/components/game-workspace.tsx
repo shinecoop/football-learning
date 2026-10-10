@@ -1,4 +1,6 @@
 "use client";
+import { PlayerRatings } from "./player-ratings";
+import { baselineAttributes } from "@/domain/workspace-extras";
 import { useState } from "react";
 import {
   useStore,
@@ -8,12 +10,7 @@ import {
   deleteExtra,
   importPlayers,
 } from "@/lib/store";
-import {
-  newProfile,
-  ratingDefinitions,
-  RECEIVER_IDS,
-  scenarioCoverage,
-} from "@/domain/sandbox";
+import { newProfile, RECEIVER_IDS, scenarioCoverage } from "@/domain/sandbox";
 import type { SandboxScenario } from "@/domain/sandbox";
 import type { PlayerProfile } from "@/domain/workspace-extras";
 function download(value: unknown, name: string) {
@@ -44,7 +41,9 @@ export function GameWorkspace({
   const [player, setPlayer] = useState<PlayerProfile>(() => ({
     id: crypto.randomUUID(),
     name: "New player",
-    side: "offense",
+    side: "both",
+    positions: "",
+    attributes: { ...baselineAttributes },
     ratings: newProfile().ratings,
     releaseDelay: 0,
     notes: "",
@@ -82,7 +81,12 @@ export function GameWorkspace({
           [id]: { speed: p.ratings.speed, releaseDelay: p.releaseDelay },
         },
       });
-    else {
+    else if (scenario.players.some((actor) => actor.id === id)) {
+      update({
+        ...scenario,
+        lineup: { ...scenario.lineup, [id]: structuredClone(p) },
+      });
+    } else {
       const existing = scenario.defenders[id];
       const alignment = scenarioCoverage(scenario).defenders.find(
         (d) => d.id === id,
@@ -227,12 +231,13 @@ export function GameWorkspace({
             ))}
             <h3 style={{ marginTop: 24 }}>Assign a lineup</h3>
             <p className="muted-copy">
-              Profiles copy settings into the current game. Offense uses speed
-              and release delay; defense uses all six ratings. QB and center
-              remain alignment references.
+              Assign the same two-way athlete on offense and defense. Games
+              retain a snapshot of the full player profile. Additional skills
+              are saved for future simulation models; the current preview uses
+              its existing movement settings.
             </p>
             {[
-              ...RECEIVER_IDS,
+              ...scenario.players.map((actor) => actor.id),
               ...scenarioCoverage(scenario).defenders.map((d) => d.id),
             ].map((id) => (
               <div className="roster-row" key={id}>
@@ -250,8 +255,11 @@ export function GameWorkspace({
                   {store.playerProfiles
                     .filter(
                       (p) =>
+                        p.side === "both" ||
                         p.side ===
-                        (RECEIVER_IDS.includes(id) ? "offense" : "defense"),
+                          (scenario.players.some((actor) => actor.id === id)
+                            ? "offense"
+                            : "defense"),
                     )
                     .map((p) => (
                       <option key={p.id} value={p.id}>
@@ -273,8 +281,9 @@ export function GameWorkspace({
               />
             </label>
             <label>
-              Side
+              Plays on
               <select
+                aria-label="Plays on"
                 value={player.side}
                 onChange={(e) =>
                   setPlayer({
@@ -285,32 +294,22 @@ export function GameWorkspace({
               >
                 <option value="offense">Offense</option>
                 <option value="defense">Defense</option>
+                <option value="both">Offense & defense</option>
               </select>
             </label>
-            {ratingDefinitions
-              .filter((d) => player.side === "defense" || d.key === "speed")
-              .map((d) => (
-                <label key={d.key}>
-                  {d.label} · {player.ratings[d.key]}
-                  <input
-                    aria-label={`Player ${d.label}`}
-                    type="range"
-                    min={0}
-                    max={100}
-                    value={player.ratings[d.key]}
-                    onChange={(e) =>
-                      setPlayer({
-                        ...player,
-                        ratings: {
-                          ...player.ratings,
-                          [d.key]: Number(e.target.value),
-                        },
-                      })
-                    }
-                  />
-                </label>
-              ))}
-            {player.side === "offense" && (
+            <label>
+              Positions
+              <input
+                placeholder="e.g. WR / CB, RB / LB"
+                value={player.positions ?? ""}
+                maxLength={100}
+                onChange={(e) =>
+                  setPlayer({ ...player, positions: e.target.value })
+                }
+              />
+            </label>
+            <PlayerRatings player={player} onChange={setPlayer} />
+            {player.side !== "defense" && (
               <label>
                 Release delay (seconds)
                 <input
@@ -386,7 +385,8 @@ export function GameWorkspace({
             {store.playerProfiles.map((p) => (
               <div className="saved-row" key={p.id}>
                 <strong>
-                  {p.name} · {p.side}
+                  {p.name} · {p.side === "both" ? "two-way" : p.side}
+                  {p.positions ? ` · ${p.positions}` : ""}
                 </strong>
                 <button
                   className="button secondary"

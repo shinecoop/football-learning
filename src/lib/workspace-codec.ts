@@ -1,3 +1,7 @@
+import {
+  playerAttributeNames,
+  baselineAttributes,
+} from "@/domain/workspace-extras";
 import type {
   PlayerProfile,
   SavedGame,
@@ -297,11 +301,16 @@ export function parseScenario(value: unknown): SandboxScenario {
     throw new Error("Profile snapshot does not match the scenario profile ID.");
   const lineup: Record<string, PlayerProfile> = {};
   for (const [actorId, raw] of Object.entries(object(v.lineup ?? {}))) {
-    if (!RECEIVER_IDS.includes(actorId) && !Object.hasOwn(defenders, actorId))
+    if (
+      !players.some((p) => p.id === actorId) &&
+      !Object.hasOwn(defenders, actorId)
+    )
       throw new Error("Unknown lineup position.");
     const profile = parsePlayerProfile(raw);
     if (
-      profile.side !== (RECEIVER_IDS.includes(actorId) ? "offense" : "defense")
+      profile.side !== "both" &&
+      profile.side !==
+        (players.some((p) => p.id === actorId) ? "offense" : "defense")
     )
       throw new Error("Player profile side does not match lineup position.");
     lineup[actorId] = profile;
@@ -455,9 +464,21 @@ export function decodeDesignerPlay(
 
 export function parsePlayerProfile(value: unknown): PlayerProfile {
   const v = object(value);
-  if (v.side !== "offense" && v.side !== "defense")
+  if (v.side !== "offense" && v.side !== "defense" && v.side !== "both")
     throw new Error("Invalid player side.");
+  const attributes = { ...baselineAttributes };
+  if (v.attributes !== undefined) {
+    const values = object(v.attributes);
+    for (const key of Object.keys(
+      playerAttributeNames,
+    ) as (keyof typeof attributes)[]) {
+      if (values[key] !== undefined)
+        attributes[key] = number(values[key], 0, 100);
+    }
+  }
   return {
+    ...(v.attributes !== undefined ? { attributes } : {}),
+    ...(v.positions !== undefined ? { positions: text(v.positions, 100) } : {}),
     id: id(v.id),
     name: text(v.name, 100, false),
     side: v.side,

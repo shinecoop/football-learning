@@ -5,7 +5,7 @@ import Link from "next/link";
 import { Search, BookOpen, Waypoints, Book, X, ArrowRight } from "lucide-react";
 import { lessons, categories } from "@/domain/curriculum";
 import { glossary } from "@/domain/glossary";
-import { Dashboard, Curriculum, Glossary } from "./learning";
+import { Curriculum, Glossary } from "./learning";
 import { PassingLab } from "./passing-lab";
 import { LessonPage } from "./lesson";
 import { Designer } from "./designer";
@@ -40,7 +40,7 @@ export function Application() {
   const parts = path.split("/").filter(Boolean);
   const active = parts[0] ?? "overview";
   let content: React.ReactNode;
-  if (active === "overview") content = <Dashboard />;
+  if (active === "overview") content = <Curriculum />;
   else if (active === "learn") content = <Curriculum categoryId={parts[1]} />;
   else if (active === "lesson")
     content = <LessonPage key={parts[1]} id={parts[1]} />;
@@ -186,7 +186,6 @@ export function Application() {
             : active === "glossary"
               ? []
               : [
-                  ["/", "Overview"],
                   ["/learn", "Curriculum"],
                   ["/training", "Practice"],
                 ]

@@ -217,11 +217,11 @@ export function Training() {
           )}
           {answer !== undefined && (
             <div
-              className={`training-feedback ${isCorrect ? "success" : ""}`}
+              className={`training-feedback ${isCorrect ? "success" : "error"}`}
               role="status"
             >
               <span className="eyebrow">
-                {isCorrect ? "WELL READ" : "LOOK AGAIN"}
+                {isCorrect ? "CORRECT · WELL READ" : "INCORRECT · LOOK AGAIN"}
               </span>
               <h3>
                 {mode === "coverage"

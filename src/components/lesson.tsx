@@ -224,11 +224,14 @@ export function LessonPage({ id }: { id: string }) {
               ))}
             </div>
             {answer !== undefined && (
-              <div className="quiz-feedback">
+              <div
+                className={`quiz-feedback ${answer === lesson.quiz.answer ? "success" : "error"}`}
+                role="status"
+              >
                 <h3>
                   {answer === lesson.quiz.answer
                     ? "Correct."
-                    : "Keep the responsibilities in view."}
+                    : "Not quite. Keep the responsibilities in view."}
                 </h3>
                 <p>{lesson.quiz.explanation}</p>
                 <button
