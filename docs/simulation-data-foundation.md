@@ -31,6 +31,26 @@ Sources:
 
 [Supabase API security](https://supabase.com/docs/guides/api/securing-your-api) explains grants and row-level security. Future authenticated libraries need owner-specific policies before becoming accessible to the Sandbox. No frontend database connection or secret has been added in this change.
 
+## Connect another developer's machine to the shared project
+
+Use the existing shared Supabase project. Ask its owner for organization access and
+enter the project URL and an authorized secret key in your own ignored `.env.local`.
+`.env.example` documents the required variable names without credentials. Never use
+`NEXT_PUBLIC_` for the secret key. Do not rerun the table-creation migration if it
+has already been applied to the shared database.
+
+Node 22 or 24 can load the local configuration for the importer explicitly:
+
+```sh
+node --env-file=.env.local scripts/ratings/import.mjs scripts/ratings/example.synthetic.json
+```
+
+This is a dry run and does not verify the connection or write to Supabase. Use
+`--apply` only when intentionally importing an authorized export; do not import the
+synthetic fixture into the shared project unless the team agrees. The website
+currently has no Supabase-backed retrieval path: `pnpm dev` still runs its local
+workspace, and merely setting these variables does not enable cloud synchronization.
+
 ## Proposed engine, not a description of EA's private implementation
 
 Build a headless, reproducible 2D engine independent of the webpage. A fixed timestep updates every player's state from the same prior world snapshot. Separate football responsibilities, perception/reaction delays, movement constraints, interaction outcomes, and rendering. Use a seeded random generator; save the seed, model version, scenario, and frozen ratings with every run.
