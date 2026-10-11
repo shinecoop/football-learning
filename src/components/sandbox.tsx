@@ -1,5 +1,6 @@
 "use client";
 import { GameWorkspace } from "./game-workspace";
+import { offensivePlayerLabels } from "@/domain/team-rosters";
 import { useState, useMemo } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
@@ -263,7 +264,7 @@ function SandboxWorkspace({ initial }: { initial?: SandboxScenario }) {
           Start with an idea, then compare the assumptions.
         </p>
       </div>
-      <GameWorkspace scenario={scenario} update={update} load={loadScenario} />
+      <GameWorkspace scenario={scenario} update={update} load={loadScenario} drawing={drawing} />
       <SandboxToolbar
         scenario={scenario}
         drawing={drawing}
@@ -335,6 +336,7 @@ function SandboxWorkspace({ initial }: { initial?: SandboxScenario }) {
             <FootballField
               title="Seven-on-seven scenario field"
               players={scenario.players}
+              playerLabels={offensivePlayerLabels(scenario)}
               routes={scenario.routes}
               coverage={coverage}
               positions={frame.positions}

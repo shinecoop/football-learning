@@ -1,4 +1,5 @@
 import { describe, it, expect } from "vitest";
+import { createHash } from "node:crypto";
 import {
   createScenario,
   newProfile,
@@ -22,6 +23,16 @@ import {
 } from "../src/lib/sandbox-engine";
 import { parseScenario } from "../src/lib/workspace-codec";
 import type { Route } from "../src/domain/types";
+import { baselineAttributes, type PlayerProfile } from "../src/domain/workspace-extras";
+const receiverProfile = (): PlayerProfile => ({
+  id: "receiver-profile",
+  name: "Illustrative receiver",
+  side: "offense",
+  ratings: { ...newProfile().ratings, acceleration: 50, changeOfDirection: 50, reaction: 100 },
+  attributes: { ...baselineAttributes, awareness: 100 },
+  releaseDelay: 0,
+  notes: "",
+});
 const straight: Route = {
   playerId: "Y",
   routeType: "go",
@@ -84,7 +95,171 @@ describe("timed route model", () => {
     ).toBeCloseTo(10.6666666);
   });
 });
+describe("player-aware receiver movement", () => {
+  const cut: Route = {
+    ...straight,
+    routeType: "out",
+    waypoints: [{ x: 50, y: 75 }, { x: 50, y: 65 }, { x: 90, y: 65 }],
+  };
+  it("lineup acceleration meaningfully changes the initial ramp", () => {
+    const low = receiverProfile(), high = receiverProfile();
+    low.ratings.acceleration = 0;
+    high.ratings.acceleration = 100;
+    expect(distanceYards(
+      receiverPosition(straight, 1, 50, 0, low),
+      receiverPosition(straight, 1, 50, 0, high),
+    )).toBeGreaterThan(2);
+  });
+  it.each(["changeOfDirection", "routeRunning"] as const)(
+    "%s changes cut timing but not straight-stem movement",
+    (key) => {
+      const low = receiverProfile(), high = receiverProfile();
+      if (key === "changeOfDirection") {
+        low.ratings[key] = 0;
+        high.ratings[key] = 100;
+      } else {
+        low.attributes![key] = 0;
+        high.attributes![key] = 100;
+      }
+      expect(receiverPosition(straight, 2.5, 50, 0, low)).toEqual(
+        receiverPosition(straight, 2.5, 50, 0, high),
+      );
+      const slow = receiverPosition(cut, 2.5, 50, 0, low);
+      const fast = receiverPosition(cut, 2.5, 50, 0, high);
+      expect(fast.y).toBe(65);
+      expect(fast.x).toBeGreaterThan(slow.x);
+      expect(distanceYards(slow, fast)).toBeGreaterThan(1);
+      expect(receiverPosition(cut, 100, 50, 0, low)).toEqual(cut.waypoints.at(-1));
+    },
+  );
+  it("accumulates turn delays without position jumps at successive corners", () => {
+    const player = receiverProfile();
+    const route: Route = {
+      ...cut,
+      waypoints: [
+        { x: 50, y: 75 },
+        { x: 50, y: 65 },
+        { x: 60, y: 65 },
+        { x: 60, y: 45 },
+      ],
+    };
+    const speed = 5.2 + 50 * 0.036;
+    const acceleration = 2.2 + player.ratings.acceleration * 0.055;
+    const rampDistance = speed * speed / (2 * acceleration);
+    const travelTime = (distance: number) => distance < rampDistance
+      ? Math.sqrt(2 * distance / acceleration)
+      : distance / speed + speed / (2 * acceleration);
+    const turnDelay = (Math.PI / 2)
+      / (1.1 + player.ratings.changeOfDirection * 0.034)
+      * (1.3 - player.attributes!.routeRunning * 0.008);
+    let traveled = 0;
+    for (let i = 1; i <= 2; i++) {
+      traveled += distanceYards(route.waypoints[i - 1], route.waypoints[i]);
+      const arrival = travelTime(traveled) + (i - 1) * turnDelay;
+      const departure = arrival + turnDelay;
+      const corner = route.waypoints[i];
+      expect(receiverPosition(route, arrival + turnDelay / 2, 50, 0, player)).toEqual(corner);
+      for (const seconds of [arrival - 0.00001, arrival, departure, departure + 0.00001]) {
+        expect(distanceYards(receiverPosition(route, seconds, 50, 0, player), corner))
+          .toBeLessThanOrEqual(speed * 0.00001 + 1e-9);
+      }
+      expect(distanceYards(
+        receiverPosition(route, departure + 0.1, 50, 0, player), corner,
+      )).toBeGreaterThan(0.1);
+    }
+  });
+  it("awareness adds start lag, with reaction as the legacy profile fallback", () => {
+    const low = receiverProfile(), high = receiverProfile();
+    low.attributes!.awareness = 0;
+    expect(receiverPosition(straight, 0.2, 50, 0, low)).toEqual(straight.waypoints[0]);
+    expect(receiverPosition(straight, 0.2, 50, 0, high).y).toBeLessThan(75);
+    expect(distanceYards(
+      receiverPosition(straight, 1.5, 50, 0, low),
+      receiverPosition(straight, 1.5, 50, 0, high),
+    )).toBeGreaterThan(1);
+    delete low.attributes;
+    low.ratings.reaction = 0;
+    expect(receiverPosition(straight, 0.2, 50, 0, low)).toEqual(straight.waypoints[0]);
+  });
+  it("keeps editable speed and release delay authoritative over profile values", () => {
+    const player = receiverProfile();
+    const before = receiverPosition(straight, 3, 50, 0.4, player);
+    player.ratings.speed = 0;
+    player.releaseDelay = 5;
+    expect(receiverPosition(straight, 3, 50, 0.4, player)).toEqual(before);
+    expect(receiverPosition(straight, 0.4, 50, 0.4, player)).toEqual(straight.waypoints[0]);
+    expect(receiverPosition(straight, 3, 100, 0.4, player).y).toBeLessThan(before.y);
+    expect(receiverPosition(straight, 3, 50, 1.4, player).y).toBeGreaterThan(before.y);
+  });
+  it("ignores duplicate waypoints when charging turns and clamps player ratings", () => {
+    const player = receiverProfile();
+    const duplicate = { ...cut, waypoints: [cut.waypoints[0], cut.waypoints[1], cut.waypoints[1], cut.waypoints[2]] };
+    for (const seconds of [0, 1, 1.5, 2, 3, 100]) {
+      expect(receiverPosition(duplicate, seconds, 50, 0, player)).toEqual(
+        receiverPosition(cut, seconds, 50, 0, player),
+      );
+    }
+    const clamped = structuredClone(player);
+    player.ratings.acceleration = 200;
+    player.ratings.changeOfDirection = -100;
+    player.attributes!.awareness = -100;
+    player.attributes!.routeRunning = 200;
+    clamped.ratings.acceleration = 100;
+    clamped.ratings.changeOfDirection = 0;
+    clamped.attributes!.awareness = 0;
+    clamped.attributes!.routeRunning = 100;
+    expect(receiverPosition(cut, 3, 50, 0, player)).toEqual(
+      receiverPosition(cut, 3, 50, 0, clamped),
+    );
+  });
+  it.each(["acceleration", "changeOfDirection", "awareness", "routeRunning"] as const)(
+    "uses lineup %s in deterministic replays without mutating the scenario",
+    (key) => {
+      const scenario = createScenario();
+      scenario.routes = [cut];
+      scenario.lineup = { Y: receiverProfile() };
+      const low = structuredClone(scenario), high = structuredClone(scenario);
+      if (key === "acceleration" || key === "changeOfDirection") {
+        low.lineup!.Y.ratings[key] = 0;
+        high.lineup!.Y.ratings[key] = 100;
+      } else {
+        low.lineup!.Y.attributes![key] = 0;
+        high.lineup!.Y.attributes![key] = 100;
+      }
+      const before = structuredClone(high);
+      const profile = newProfile();
+      const result = simulateScenario(high, profile);
+      expect(result).toEqual(simulateScenario(high, profile));
+      expect(high).toEqual(before);
+      expect(distanceYards(
+        frameAt(simulateScenario(low, profile), 2.5).positions.Y,
+        frameAt(result, 2.5).positions.Y,
+      )).toBeGreaterThan(1);
+      expect(frameAt(result, 2.5).positions.X).toEqual(
+        frameAt(simulateScenario(scenario, profile), 2.5).positions.X,
+      );
+    },
+  );
+});
 describe("explicit seven-on-seven assignments", () => {
+  it("preserves baseline replay geometry without a lineup", () => {
+    const hashes = SANDBOX_COVERAGES.map((coverage) => {
+      const replay = simulateScenario(createScenario("mesh", coverage), newProfile());
+      // Audit metadata changed, but baseline geometry is unchanged. Canonicalize
+      // only the model version to retain the independently captured pre-change hashes.
+      return createHash("sha256")
+        .update(JSON.stringify({ ...replay, modelVersion: "assignment-movement-v1" }))
+        .digest("hex");
+    });
+    expect(hashes).toMatchInlineSnapshot(`
+      [
+        "1b03df568a87bce8c3146380925bc1ac6ade2cf839e23a1f0d7111e62d86f9d1",
+        "eb40078f8954797b5282b5a9a1500da044a79533342786d09b47adb66e5c7f55",
+        "9b03a979829ac0fed82caaf55fefcf5bb9df4f7dcae36d68470ae27304ea8d50",
+        "266863de96e9387783caca3ead08e3769527230f91583b9586c3794303137ebc",
+      ]
+    `);
+  });
   it("has seven offensive and seven defensive players in every supported formation and coverage", () => {
     for (const formation of SANDBOX_FORMATIONS)
       for (const coverage of SANDBOX_COVERAGES) {

@@ -225,7 +225,12 @@ export function parseScenario(value: unknown): SandboxScenario {
     !SANDBOX_COVERAGES.includes(v.coverageId as SandboxScenario["coverageId"])
   )
     throw new Error("Unknown scenario version or coverage.");
-  if (v.modelVersion !== undefined && v.modelVersion !== SANDBOX_MODEL_VERSION)
+  // V1 scenarios retain their setup; lineup-aware replays now use the V2 model.
+  if (
+    v.modelVersion !== undefined &&
+    v.modelVersion !== "assignment-movement-v1" &&
+    v.modelVersion !== SANDBOX_MODEL_VERSION
+  )
     throw new Error(
       "This scenario uses an unsupported movement model version.",
     );

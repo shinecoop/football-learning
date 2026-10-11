@@ -5,7 +5,8 @@
 The repository contains a Supabase-compatible PostgreSQL migration and an EA roster
 snapshot. **No hosted database has been configured or populated yet.** There are no
 Supabase credentials in this project. The existing application still uses its local
-store; these tables do not change the interactive diagram's behavior.
+store; these tables do not change the interactive diagram's behavior. The domain
+roster import described below works entirely locally and does not query Supabase.
 
 ## Captured data
 
@@ -20,6 +21,55 @@ store; these tables do not change the interactive diagram's behavior.
 These are video-game ratings, not measured physical performance. Review EA's terms
 and applicable licensing before publishing or redistributing this dataset. This is a
 one-time source snapshot, not a configured recurring scraper.
+
+## Local roster import and five dimensions
+
+`src/domain/broncos-roster.json` is a compact, 60-player projection of the same
+`data/ea/broncos-madden-27-week-3.json` snapshot used to generate `supabase/seed.sql`.
+It includes EA IDs, names, positions, source sides, overall ratings, the ratings
+needed by the existing player-profile schema, and shared provenance metadata.
+Special-teams players and rushers remain in this data but are not selected for the
+seven-on-seven lineup. No hosted database, credentials, or network request is needed.
+
+`src/domain/team-rosters.ts` exports:
+
+- `TEAM_OPTIONS`: `broncos-26-27`, labeled **2026–27 Denver Broncos**. This is the
+  application's team label; the snapshot identity is Madden NFL 27 / Week 3.
+- `importTeam(scenario, teamId)`: returns an independent scenario with all 14 lineup
+  profiles. Highest overall wins within each position pool; ties use ascending EA ID,
+  and each player is selected at most once. Slots are selected in this order: QB,
+  C, X/Z/H (WR), Y (TE), RB (HB), CBL/CBR/A (CB), SL (FS), SR (SS), M/W
+  (MIKE/WILL). `A` is the actual nickel slot; `SL`/`SR` are the actual safety IDs.
+  Unknown team IDs throw without changing the input. Routes, alignments, coverage
+  assignments, release delays, scenario timing, opponent profile, and other scenario
+  metadata are preserved. Receiver speeds and per-defender ratings are updated.
+- `playerSkillSummary(profile, assignmentType?)`: returns five `{ label, value }`
+  dimensions: **Speed**, **Acceleration**, **Change of direction**, **Awareness**,
+  and **Technique**. Technique uses mean short/mid/deep throw accuracy for QBs,
+  pass blocking for centers, mean short/mid/deep route running for receivers
+  (including TE/HB), and man or zone coverage for defenders according to assignment.
+  Other defensive assignments, or no assignment, use the mean of man/zone coverage.
+  Existing profiles without optional attributes use baseline attribute values;
+  awareness falls back to their reaction rating.
+
+Profiles use only existing codec fields. Source awareness maps to both `awareness`
+and the sandbox's `reaction` assumption; source `zoneCoverage` maps to
+`zoneDiscipline`, `bCVision` to `ballVision`, and `tackle` to `tackling`. Remaining
+attributes map directly except the arithmetic means above (not rounded). Source
+overall, EA ID, edition/update, capture time, and provenance are retained in notes;
+EA ID also supplies the stable profile ID (`ea-<id>`). Profile release delay is an
+uncalibrated zero, not derived from EA's release rating; import preserves each
+receiver's existing scenario delay.
+
+These five dimensions are **illustrative Madden video-game ratings**, not evidence
+of actual athletic skill, measured reaction time, or calibrated football outcomes.
+Importing a roster does not turn the sandbox into a validated performance model.
+
+Validate the local projection, selection, preservation, summaries, and backup codec:
+
+```sh
+npm test -- tests/team-rosters.test.ts
+```
 
 ## Tables
 

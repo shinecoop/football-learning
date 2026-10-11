@@ -16,6 +16,7 @@ import {
 } from "@/lib/simulation";
 interface Props {
   players: PlayerAlignment[];
+  playerLabels?: Record<string, { name: string; caption: string }>;
   routes?: Route[];
   coverage?: Coverage;
   defenders?: PlayerAlignment[];
@@ -48,6 +49,7 @@ interface Props {
 }
 export function FootballField({
   players,
+  playerLabels = {},
   routes = [],
   coverage,
   defenders,
@@ -392,12 +394,16 @@ export function FootballField({
           const q = transformed(pos);
           const chosen = selected === p.id;
           const lit = highlight === p.id;
+          const identity = p.side === "offense" ? playerLabels[p.id] : undefined;
+          const badgeWidth = identity ? Math.min(20, Math.max(10, identity.caption.length * 0.8 + 2)) : 0;
+          const badgeX = Math.max(badgeWidth / 2 + 1, Math.min(99 - badgeWidth / 2, q.x));
+          const badgeY = q.y > 92 ? q.y - 5.3 : q.y + 3;
           return (
             <g
               key={`${p.side}-${p.id}`}
               role={onSelect ? "button" : undefined}
               tabIndex={onSelect ? 0 : undefined}
-              aria-label={`${p.id}, ${p.position}, ${p.side}${lit ? ", key defender" : ""}`}
+              aria-label={`${p.id}, ${p.position}, ${p.side}${identity ? `, ${identity.name}` : ""}${lit ? ", key defender" : ""}`}
               onClick={(e) => {
                 e.stopPropagation();
                 onSelect?.(p.id);
@@ -473,6 +479,7 @@ export function FootballField({
                 touchAction: "none",
               }}
             >
+              {identity && <title>{p.id} · {identity.name}</title>}
               {(chosen || lit) && (
                 <circle
                   cx={q.x}
@@ -517,6 +524,14 @@ export function FootballField({
                 >
                   {p.label}
                 </text>
+              )}
+              {labels && identity && (
+                <g className="player-identity-badge" pointerEvents="none" aria-hidden="true">
+                  <rect x={badgeX - badgeWidth / 2} y={badgeY} width={badgeWidth} height="2.8" rx=".8" fill="#172b3a" fillOpacity=".94" stroke="#f5a35b" strokeWidth=".15" />
+                  <text x={badgeX} y={badgeY + 1.85} textAnchor="middle" fontSize="1.35" fontWeight="600" fill="#fff4e8">
+                    {identity.caption}
+                  </text>
+                </g>
               )}
             </g>
           );

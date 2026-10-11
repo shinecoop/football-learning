@@ -10,7 +10,7 @@ import type {
 import { coverages } from "./coverage";
 import { formations } from "./formations";
 import { concepts } from "./concepts";
-export const SANDBOX_MODEL_VERSION = "assignment-movement-v1";
+export const SANDBOX_MODEL_VERSION = "player-movement-v2";
 export const SANDBOX_DURATION = 6;
 export const SANDBOX_DT = 0.05;
 export const SANDBOX_FORMATIONS = [
@@ -301,6 +301,7 @@ export function withCoverage(
           x: d.x,
           y: d.y,
           cushion: 0,
+          ratings: scenario.defenders[d.id]?.ratings ?? scenario.lineup?.[d.id]?.ratings,
           assignment: structuredClone(
             coverage.assignments.find((a) => a.defenderId === d.id)!,
           ),

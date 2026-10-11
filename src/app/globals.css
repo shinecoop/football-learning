@@ -3257,6 +3257,37 @@ h3 {
   gap: 23px;
   align-items: start;
 }
+.team-import-controls {
+  margin-top: 16px;
+  align-items: end;
+  flex-wrap: wrap;
+}
+.sandbox-player-skills {
+  padding: 12px;
+  margin: 12px 0;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  font-size: 12px;
+}
+.sandbox-player-skills > strong,
+.sandbox-player-skills > span {
+  display: block;
+  margin-bottom: 5px;
+}
+.sandbox-player-skills dl {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(105px, 1fr));
+  gap: 8px;
+  margin: 12px 0 0;
+}
+.sandbox-player-skills dt {
+  color: var(--muted);
+  font-size: 10px;
+}
+.sandbox-player-skills dd {
+  margin: 4px 0 0;
+  font-variant-numeric: tabular-nums;
+}
 .sandbox-field-column {
   display: flex;
   flex-direction: column;

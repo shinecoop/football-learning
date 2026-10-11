@@ -6,6 +6,7 @@ import type {
 } from "@/domain/sandbox";
 import { RECEIVER_IDS, scenarioCoverage, fallbackZone } from "@/domain/sandbox";
 import { RatingSliders } from "./profile-editor";
+import { SandboxPlayerSkills } from "./sandbox-player-skills";
 export function SandboxDefenseEditor({
   scenario,
   selected,
@@ -50,11 +51,12 @@ export function SandboxDefenseEditor({
         >
           {coverage.defenders.map((d) => (
             <option key={d.id} value={d.id}>
-              {d.id} · {d.position}
+              {d.id} · {scenario.lineup?.[d.id]?.name ?? d.position}
             </option>
           ))}
         </select>
       </label>
+      <SandboxPlayerSkills scenario={scenario} actorId={defender.id} />
       <div className="form-grid compact-form">
         <label>
           X alignment

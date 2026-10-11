@@ -1,5 +1,6 @@
 "use client";
 import { Trash2, PenTool, Check, X } from "lucide-react";
+import { SandboxPlayerSkills } from "./sandbox-player-skills";
 import type { SandboxScenario } from "@/domain/sandbox";
 import { RECEIVER_IDS } from "@/domain/sandbox";
 import type { Route } from "@/domain/types";
@@ -50,11 +51,12 @@ export function SandboxRouteEditor({
         >
           {scenario.players.map((p) => (
             <option key={p.id} value={p.id}>
-              {p.id} · {p.position}
+              {p.id} · {scenario.lineup?.[p.id]?.name ?? p.position}
             </option>
           ))}
         </select>
       </label>
+      {player && <SandboxPlayerSkills scenario={scenario} actorId={player.id} />}
       {player && (
         <div className="coordinate-controls">
           <label>

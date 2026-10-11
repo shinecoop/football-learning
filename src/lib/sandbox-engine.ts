@@ -1,4 +1,5 @@
 import type { Point, Route } from "@/domain/types";
+import type { PlayerProfile } from "@/domain/workspace-extras";
 import type {
   Ratings,
   ReplayFrame,
@@ -61,15 +62,28 @@ export function receiverPosition(
   seconds: number,
   speedRating: number,
   releaseDelay = 0,
+  player?: PlayerProfile,
 ): Point {
-  const t = Math.max(0, seconds - releaseDelay);
+  // Illustrative timing assumptions, not measured athletic performance. Editable
+  // speed/releaseDelay override their profile equivalents; awareness adds snap lag.
+  const startDelay = player
+    ? 0.3 * (1 - clampRating(player.attributes?.awareness ?? player.ratings.reaction) / 100)
+    : 0;
+  const t = Math.max(0, seconds - releaseDelay - startDelay);
   const speed = 5.2 + clampRating(speedRating) * 0.036;
-  const acceleration = 4.5;
+  const acceleration = player
+    ? 2.2 + clampRating(player.ratings.acceleration) * 0.055
+    : 4.5;
   const ramp = speed / acceleration;
-  let remaining =
-    t < ramp
-      ? 0.5 * acceleration * t * t
-      : 0.5 * acceleration * ramp * ramp + speed * (t - ramp);
+  const distanceAt = (time: number) => {
+    const elapsed = Math.max(0, time);
+    return elapsed < ramp
+      ? 0.5 * acceleration * elapsed * elapsed
+      : 0.5 * acceleration * ramp * ramp + speed * (elapsed - ramp);
+  };
+  let remaining = distanceAt(t);
+  let traveled = 0;
+  let turnDelay = 0;
   for (let i = 1; i < route.waypoints.length; i++) {
     const a = route.waypoints[i - 1],
       b = route.waypoints[i],
@@ -79,6 +93,25 @@ export function receiverPosition(
       return { x: a.x + (b.x - a.x) * f, y: a.y + (b.y - a.y) * f };
     }
     remaining -= length;
+    traveled += length;
+    if (player && length > 0) {
+      const next = route.waypoints.slice(i + 1).find((p) => distanceYards(b, p) > 0);
+      if (next) {
+        const start = toYards(a), corner = toYards(b), end = toYards(next);
+        const incoming = Math.atan2(corner.y - start.y, corner.x - start.x);
+        const outgoing = Math.atan2(end.y - corner.y, end.x - corner.x);
+        const angle = Math.abs(Math.atan2(
+          Math.sin(outgoing - incoming), Math.cos(outgoing - incoming),
+        ));
+        const turnRate = 1.1 + clampRating(player.ratings.changeOfDirection) * 0.034;
+        const technique = 1.3 - clampRating(player.attributes?.routeRunning ?? 50) * 0.008;
+        // Charge turn preparation at the waypoint, retaining the authored route
+        // rather than rounding cuts into unassigned space. Straight stems pay none.
+        turnDelay += angle / turnRate * technique;
+        remaining = distanceAt(t - turnDelay) - traveled;
+        if (remaining <= 0) return { x: b.x, y: b.y };
+      }
+    }
   }
   return route.waypoints[0];
 }
@@ -194,6 +227,7 @@ export function simulateScenario(
                 seconds,
                 settings.speed,
                 settings.releaseDelay,
+                scenario.lineup?.[p.id],
               )
             : { x: p.x, y: p.y },
         ];

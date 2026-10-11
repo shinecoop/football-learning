@@ -165,6 +165,10 @@ describe("workspace validation and migration", () => {
 });
 
 describe("replay audit metadata", () => {
+  it("migrates previous movement model setups without losing scenario data", () => {
+    const scenario = createScenario();
+    expect(parseScenario({ ...scenario, modelVersion: "assignment-movement-v1" })).toEqual(scenario);
+  });
   it("preserves the model identity and refuses unknown movement model versions", () => {
     const scenario = createScenario();
     expect(parseScenario(scenario).modelVersion).toBe(scenario.modelVersion);

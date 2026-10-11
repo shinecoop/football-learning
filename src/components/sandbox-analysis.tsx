@@ -142,9 +142,10 @@ export function SandboxTiming({
       <div className="note-box">
         <p>
           Speed changes distance traveled over time; the release delay holds the
-          receiver at the start. All receivers use a common illustrative
-          acceleration. The pressure deadline is hypothetical: seven-on-seven
-          has no live rush here.
+          receiver at the start. Assigned players use individual acceleration,
+          awareness-based start lag, and change-of-direction / route-running
+          timing at cuts; unassigned receivers keep baseline movement.
+          The pressure deadline is hypothetical: seven-on-seven has no live rush here.
         </p>
       </div>
     </>
@@ -342,7 +343,9 @@ export function SandboxRules({
         <summary>Movement model · {SANDBOX_MODEL_VERSION}</summary>
         <p>
           Fixed 0.05-second steps. Receivers accelerate along straight route
-          segments. Defenders have speed, acceleration, reaction delay, and a
+          segments; assigned players use individual acceleration and awareness,
+          plus turn delays from change of direction and route running. Defenders
+          have speed, acceleration, reaction delay, and a
           maximum turning rate. Man defenders pursue a delayed receiver
           position; zone defenders blend their landmark with the nearest route
           in or near their zone. No reactive AI is used.

@@ -1,4 +1,39 @@
 import { test, expect } from "@playwright/test";
+
+test("Broncos team import fills every node and survives preset changes and saved games", async ({ page }) => {
+  await page.goto("/sandbox");
+  await page.getByLabel("Team to import").selectOption("broncos-26-27");
+  await page.getByRole("button", { name: "Import team", exact: true }).click();
+  await expect(page.getByLabel("Assign profile to QB")).toContainText("Bo Nix · applied");
+  await expect(page.getByLabel("Assign profile to CBL")).toContainText("Pat Surtain II · applied");
+  const field = page.getByRole("group", { name: "Seven-on-seven scenario field" });
+  await expect(field.locator(".player-identity-badge")).toHaveCount(7);
+  for (const name of ["B. Nix", "L. Wattenberg", "C. Sutton", "T. Franklin", "E. Engram", "J. Waddle", "J. Dobbins"]) {
+    await expect(field.locator(".player-identity-badge").filter({ hasText: name })).toHaveCount(1);
+  }
+  const setup = page.getByRole("region", { name: "Game workspace" });
+  await expect(setup.locator(".sandbox-player-skills")).toHaveCount(14);
+  await expect(setup.getByLabel("X player characteristics").locator("dt")).toHaveText([
+    "Speed", "Acceleration", "Change of direction", "Awareness", "Technique",
+  ]);
+  await page.getByRole("button", { name: "Undo", exact: true }).click();
+  await expect(page.getByLabel("Assign profile to QB")).not.toContainText("Bo Nix");
+  await page.getByRole("button", { name: "Redo", exact: true }).click();
+  await page.getByLabel("Sandbox formation").selectOption("trips");
+  await page.getByLabel("Starting concept").selectOption("mesh");
+  await page.getByLabel("Sandbox coverage preset").selectOption("cover1");
+  await expect(page.getByLabel("Assign profile to QB")).toContainText("Bo Nix");
+  await page.getByLabel("Game name", { exact: true }).fill("Broncos skill test");
+  await page.getByRole("button", { name: "Save game", exact: true }).click();
+  await expect.poll(() => page.evaluate(() => {
+    const game = JSON.parse(localStorage.getItem("fieldwork:v2")!).games[0];
+    return Object.keys(game.scenario.lineup).length;
+  })).toBe(14);
+  await page.getByRole("button", { name: "Standard", exact: true }).click();
+  await expect(setup.locator(".sandbox-player-skills")).toHaveCount(0);
+  await page.getByRole("button", { name: "Load game", exact: true }).click();
+  await expect(setup.locator(".sandbox-player-skills")).toHaveCount(14);
+});
 test("three primary tabs, player assignments, standard reset, and saved game snapshots", async ({
   page,
 }) => {

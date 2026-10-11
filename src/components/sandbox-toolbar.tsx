@@ -58,6 +58,9 @@ export function SandboxToolbar({
               }
               return {
                 ...next,
+                lineup: s.lineup,
+                receivers: s.receivers,
+                defenders: Object.fromEntries(Object.entries(next.defenders).map(([id, settings]) => [id, { ...settings, ratings: s.defenders[id]?.ratings }])),
                 profileId: s.profileId,
                 profileSnapshot: s.profileSnapshot,
               };
@@ -93,6 +96,9 @@ export function SandboxToolbar({
               }
               return {
                 ...next,
+                lineup: s.lineup,
+                receivers: s.receivers,
+                defenders: Object.fromEntries(Object.entries(next.defenders).map(([id, settings]) => [id, { ...settings, ratings: s.defenders[id]?.ratings }])),
                 profileId: s.profileId,
                 profileSnapshot: s.profileSnapshot,
               };

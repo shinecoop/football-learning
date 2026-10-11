@@ -1,5 +1,7 @@
 "use client";
 import { PlayerRatings } from "./player-ratings";
+import { SandboxPlayerSkills } from "./sandbox-player-skills";
+import { importTeam, TEAM_OPTIONS } from "@/domain/team-rosters";
 import { baselineAttributes } from "@/domain/workspace-extras";
 import { useState } from "react";
 import {
@@ -27,10 +29,12 @@ export function GameWorkspace({
   scenario,
   update,
   load,
+  drawing = false,
 }: {
   scenario: SandboxScenario;
   update: (s: SandboxScenario) => void;
   load: (s: SandboxScenario) => void;
+  drawing?: boolean;
 }) {
   const store = useStore();
   const [gameId, setGameId] = useState<string>();
@@ -38,6 +42,7 @@ export function GameWorkspace({
   const [opponent, setOpponent] = useState("");
   const [message, setMessage] = useState("");
   const [open, setOpen] = useState(false);
+  const [teamId, setTeamId] = useState<string>(TEAM_OPTIONS[0].id);
   const [player, setPlayer] = useState<PlayerProfile>(() => ({
     id: crypto.randomUUID(),
     name: "New player",
@@ -133,6 +138,20 @@ export function GameWorkspace({
           Baseline 50 · illustrative ratings, not measured league averages
         </span>
       </div>
+      <div className="inline-actions team-import-controls">
+        <label>
+          Team roster
+          <select aria-label="Team to import" value={teamId} disabled={drawing} onChange={(e) => setTeamId(e.target.value)}>
+            {TEAM_OPTIONS.map((team) => <option key={team.id} value={team.id}>{team.label}</option>)}
+          </select>
+        </label>
+        <button className="button secondary" disabled={drawing} onClick={() => {
+          update(importTeam(scenario, teamId));
+          setOpen(true);
+          setMessage("Broncos imported to all 14 nodes. Existing lineup replaced; routes, alignment, and timing kept. Undo restores the previous lineup.");
+        }}>Import team</button>
+      </div>
+      <p className="muted-copy">EA Madden NFL 27 · Week 3 snapshot used by the Supabase seed, not a live database query. Five skill dimensions: speed, acceleration, change of direction, awareness, and position technique. Illustrative ratings, not measured NFL performance.</p>
       {message && <p role="status">{message}</p>}
       {open && (
         <div className="game-grid">
@@ -232,15 +251,17 @@ export function GameWorkspace({
             <h3 style={{ marginTop: 24 }}>Assign a lineup</h3>
             <p className="muted-copy">
               Assign the same two-way athlete on offense and defense. Games
-              retain a snapshot of the full player profile. Additional skills
-              are saved for future simulation models; the current preview uses
-              its existing movement settings.
+              retain a snapshot of the full player profile. Receiver acceleration,
+              awareness, and cutting technique affect route timing; defender
+              movement uses individual reaction and coverage ratings. Other skills
+              are stored but do not simulate ball outcomes or contact.
             </p>
             {[
               ...scenario.players.map((actor) => actor.id),
               ...scenarioCoverage(scenario).defenders.map((d) => d.id),
             ].map((id) => (
-              <div className="roster-row" key={id}>
+              <div key={id}>
+              <div className="roster-row">
                 <strong>{id}</strong>
                 <select
                   aria-label={`Assign profile to ${id}`}
@@ -267,6 +288,8 @@ export function GameWorkspace({
                       </option>
                     ))}
                 </select>
+              </div>
+              <SandboxPlayerSkills scenario={scenario} actorId={id} />
               </div>
             ))}
           </div>
